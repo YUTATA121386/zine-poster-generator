@@ -232,6 +232,9 @@ def _run_generate_task(task_id, username, data, cfg, tmp):
         size = str(data.get("size") or cfg.get("size") or "900*1500")
         if not re.match(r"^\d+\*\d+$", size):
             raise RuntimeError("输出尺寸格式应为 宽*高，如 900*1500")
+        style = str(data.get("style") or "zine").strip()
+        if style not in poster_core.STYLES:
+            raise RuntimeError("未知风格：%s" % style)
         name = (data.get("name") or "")
         name_base = os.path.splitext(os.path.basename(name))[0] if name else None
         out_dir = out_dir_of(cfg)
@@ -248,7 +251,7 @@ def _run_generate_task(task_id, username, data, cfg, tmp):
         _task_progress(task, 10, "正在分析图片…")
         out, _, info, prompt = poster_core.generate(
             tmp, title=title, caption=caption, features=features,
-            accent_override=accent, position_override=pos_core,
+            accent_override=accent, position_override=pos_core, style=style,
             size=size, out_dir=out_dir, key=cfg["bailian_key"],
             progress=lambda msg: _task_say(task, msg),
             out_name_base=name_base)
@@ -278,6 +281,7 @@ def _run_generate_task(task_id, username, data, cfg, tmp):
             "accent": accent[0] if accent else "",
             "position": pos_fe or "",
             "size": size,
+            "style": style,
             "input_url": input_url,
             "prompt": prompt,
             "url": "/outputs/" + os.path.basename(out),

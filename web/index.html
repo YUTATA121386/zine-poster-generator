@@ -1262,6 +1262,17 @@
       </div>
 
       <div class="form-group">
+        <label class="small-label" for="styleSelect">风格</label>
+        <select id="styleSelect">
+          <option value="zine">档案风</option>
+          <option value="photo-panel">摄影抽象面板</option>
+          <option value="travel-abstract">旅行抽象研究</option>
+          <option value="paper-collage">拾景纸拼贴</option>
+          <option value="distillation">影像蒸馏</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label class="small-label" for="sizeSelect">输出尺寸</label>
         <select id="sizeSelect">
           <option value="900x1500">900 × 1500</option>
@@ -2231,6 +2242,7 @@ async function generatePoster(){
     title: title || undefined,
     caption: caption || undefined,
     accent_name, accent_hex, position, size,
+    style: $('styleSelect').value,
     features: features || undefined
   };
 

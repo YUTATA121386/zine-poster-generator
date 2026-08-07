@@ -15,6 +15,10 @@
 4. 部署后自检：`curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/` 应返回 200
 
 ## 已修复问题记录（改相关代码前先看这里）
+### 5. 海报风格选择（已上线）
+- 生成参数新增「风格」下拉，单选一种：zine 档案风（原模板）/ photo-panel 摄影抽象面板 / 	ravel-abstract 旅行抽象研究 / paper-collage 拾景纸拼贴（gathered-scenes 实景拼贴）/ distillation 影像蒸馏（gathered-scenes 影像蒸馏）
+- 前端 style 随 /api/generate 提交，后端校验合法值后透传 poster_core.generate(style=...)；历史记录新增 style 字段，旧记录无此字段按 zine 展示
+- 风格 prompt 模板在 poster_core.py 的 STYLES 与 _prompt_* 系列函数中
 ### 1. 手机端容易登出（已修复上线）
 - 根因：登录态只存内存（`SESSIONS = {}`），服务一重启全部失效；有效期仅 7 天
 - 修复：`load_sessions`/`save_sessions` 落盘 `DATA_DIR/sessions.json`，有效期 30 天
