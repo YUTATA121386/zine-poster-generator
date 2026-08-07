@@ -22,7 +22,7 @@
 ### 6. 位置建议仅档案风使用 + 日志显示风格（已上线）
 - 图片分析出的「建议主体位置」只注入档案风（zine）的 prompt；摄影抽象面板、旅行抽象研究改为按自身构图平衡放置 motif（paper-collage/distillation 本就不使用位置）；非档案风生成进度提示改为「构图由风格决定」，前端分析结果区显示「随风格构图」且不高亮九宫格
 - 生成记录（个人抽屉）与管理台日志新增「风格」列，旧记录无 style 字段按「档案风」显示
-- 注意：历史记录里 position 存的是 core 值（upper-*），前端 positionLabelFromValue 只认 top-*，管理台位置列会显示英文原值（既有问题，未修）
+- 历史记录里 position 存的是 core 值（upper-*/center-*/lower-*），前端 positionLabelFromValue 已做归一化，管理台与生成记录位置列均显示中文
 ### 1. 手机端容易登出（已修复上线）
 - 根因：登录态只存内存（`SESSIONS = {}`），服务一重启全部失效；有效期仅 7 天
 - 修复：`load_sessions`/`save_sessions` 落盘 `DATA_DIR/sessions.json`，有效期 30 天
