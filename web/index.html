@@ -1824,8 +1824,12 @@ function renderAnalysis(data){
   $('accentName').textContent = data.accent_name || '—';
   $('accentHex').textContent = data.accent_hex || '—';
   $('accentSwatch').style.backgroundColor = data.accent_hex || 'transparent';
-  const styleNow = ($('styleSelect') && $('styleSelect').value) || 'zine';
-  if(styleNow === 'zine'){
+  applyPositionView(data, ($('styleSelect') && $('styleSelect').value) || 'zine');
+}
+
+function applyPositionView(data, style){
+  if(!data) return;
+  if(style === 'zine'){
     $('positionLabel').textContent = data.position_label || positionLabelFromValue(data.position) || '—';
     highlightPosition(data.position);
   }else{
@@ -1833,6 +1837,21 @@ function renderAnalysis(data){
     highlightPosition(null);
   }
 }
+
+// 切换风格时同步刷新位置展示，并禁用无效的「主体位置」下拉
+$('styleSelect').addEventListener('change', () => {
+  const styleNow = $('styleSelect').value;
+  const posSel = $('positionSelect');
+  if(posSel){
+    if(styleNow === 'zine'){
+      posSel.disabled = false;
+    }else{
+      posSel.value = 'auto';
+      posSel.disabled = true;
+    }
+  }
+  if(currentAnalysis) applyPositionView(currentAnalysis, styleNow);
+});
 
 const STYLE_LABELS = {zine:'档案风','photo-panel':'摄影抽象面板','travel-abstract':'旅行抽象研究','paper-collage':'拾景纸拼贴',distillation:'影像蒸馏'};
 function styleLabel(v){ return STYLE_LABELS[v] || '档案风'; }
