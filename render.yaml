@@ -15,3 +15,5 @@ services:
         sync: false
       - key: DEEPSEEK_API_KEY
         sync: false
+      - key: POSTER_ADMIN_TOKEN
+        sync: false

@@ -20,13 +20,15 @@ GitHub Pages 只能托管静态页面，无法运行本项目（需要 Python �
 
 1. 打开 https://render.com 注册（免费，可用 GitHub 账号登录）
 2. 点 New + -> Blueprint -> 选择本仓库 `zine-poster-generator`
-3. 按提示填入两个环境变量（Render 会让你在部署时填写，不会入库）：
+3. 按提示填入三个环境变量（Render 会让你在部署时填写，不会入库）：
    - `POSTER_API_KEY`：阿里云百炼 API Key
    - `DEEPSEEK_API_KEY`：DeepSeek API Key
+   - `POSTER_ADMIN_TOKEN`：管理密码（查看生成记录用，建议设置）
 4. 点 Apply，约 3 分钟完成，访问 `https://zine-poster-generator.onrender.com`
 
 说明：
 - 线上模式下页面设置不可改 Key（由环境变量管理）；生成接口公开，任何人可用你的 Key 额度出图，注意成本
+- 每次生成会自动记录（时间/IP/文案/参数/成品图，存于服务器 `history.jsonl`），页面右上角「生成记录」凭管理密码查看
 - Render 免费实例无请求约 15 分钟后休眠，再次访问首次加载约需 30-60 秒（冷启动）
 - 如需国内直连，可改用阿里云函数计算/轻量服务器（本项目为标准 Python 服务，任意可跑 Python 的环境均可）
 
