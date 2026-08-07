@@ -1830,7 +1830,13 @@ function positionLabelFromValue(v){
     'middle-left':'左中','center':'居中','middle-right':'右中',
     'bottom-left':'左下','bottom-center':'下中','bottom-right':'右下'
   };
-  return map[v] || v;
+  const key = String(v || '')
+    .replace('upper-', 'top-')
+    .replace('lower-', 'bottom-')
+    .replace('center-left', 'middle-left')
+    .replace('center-right', 'middle-right')
+    .replace('-middle', '-center');
+  return map[key] || v;
 }
 
 function highlightPosition(pos){
@@ -1952,7 +1958,7 @@ function renderHistory(records, bodyEl){
       r.theme ? '主题: ' + r.theme : '',
       r.title ? '文案: ' + r.title : '',
       r.accent ? '强调色: ' + r.accent : '',
-      r.position ? '位置: ' + r.position : '',
+      r.position ? '位置: ' + positionLabelFromValue(r.position) : '',
       r.size || ''
     ].filter(Boolean).join('<br>');
     const imgs = [];
