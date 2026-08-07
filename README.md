@@ -18,23 +18,62 @@
 - 首次启动会自动迁移旧配置（`~\.codex\skills\vision\.env` 里的百炼 Key）
 - Key 只保存在本机 `config.json`，界面掩码显示，不会上传任何服务
 
-## 部署为在线网站（推荐：Render 免费一键部署）
+## 部署为在线网站（推荐：阿里云轻量服务器）
 
-GitHub Pages 只能托管静态页面，无法运行本项目（需要 Python 后端 + 服务器端 API Key），因此使用免费托管平台 Render 自动部署，绑定 GitHub 仓库后 push 即自动上线。
+GitHub Pages 只能托管静态页面，无法运行本项目（需要 Python 后端 + 服务器端 API Key），推荐部署到阿里云轻量应用服务器：国内直连快、数据持久、约 ¥30-50/月。
 
-1. 打开 https://render.com 注册（免费，可用 GitHub 账号登录）
-2. 点 New + -> Blueprint -> 选择本仓库 `zine-poster-generator`
-3. 按提示填入三个环境变量（Render 会让你在部署时填写，不会入库）：
-   - `POSTER_API_KEY`：阿里云百炼 API Key
-   - `DEEPSEEK_API_KEY`：DeepSeek API Key
-   - `POSTER_ADMIN_TOKEN`：管理密码（查看生成记录用，建议设置）
-4. 点 Apply，约 3 分钟完成，访问 `https://zine-poster-generator.onrender.com`
+### 1. 购买服务器
 
-说明：
-- 线上模式下页面设置不可改 Key（由环境变量管理）；生成接口公开，任何人可用你的 Key 额度出图，注意成本
-- 用户与记录存于服务器 `history.jsonl` / `users.json`（均不入库），页面右上角「生成记录」查看
-- Render 免费实例无请求约 15 分钟后休眠，再次访问首次加载约需 30-60 秒（冷启动）
-- 如需国内直连，可改用阿里云函数计算/轻量服务器（本项目为标准 Python 服务，任意可跑 Python 的环境均可）
+阿里云控制台搜索「轻量应用服务器」：系统选 **Ubuntu 22.04**，地域选离你近的（如华东1-杭州），2核2G 起步即可，确认安全组放行 **80/443 端口**（或 8000）。
+
+### 2. 服务器上执行（SSH 登录后）
+
+```bash
+# 安装依赖
+apt update && apt install -y python3-pip git
+pip3 install pillow
+
+# 拉取代码
+git clone https://github.com/YUTATA121386/zine-poster-generator.git /opt/poster-gen
+cd /opt/poster-gen
+
+# 数据目录（持久化：账号/记录/图片都在这）
+mkdir -p /var/lib/poster-gen
+
+# 写环境变量配置
+cat > /etc/poster-gen.env <<'EOF'
+POSTER_DEPLOYED=1
+POSTER_HOST=0.0.0.0
+POSTER_PORT=8000
+POSTER_DATA_DIR=/var/lib/poster-gen
+POSTER_API_KEY=你的百炼Key
+DEEPSEEK_API_KEY=你的DeepSeekKey
+EOF
+
+# systemd 守护（开机自启、崩溃自动重启）
+cat > /etc/systemd/system/poster-gen.service <<'EOF'
+[Unit]
+Description=Zine Poster Generator
+After=network.target
+[Service]
+EnvironmentFile=/etc/poster-gen.env
+WorkingDirectory=/opt/poster-gen
+ExecStart=/usr/bin/python3 poster_server.py
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now poster-gen
+```
+
+3. 浏览器访问 `http://服务器公网IP:8000`，**第一时间注册你自己的账号**（第一个注册的是管理员）
+4. 可选：用 Nginx/Caddy 反代 80 端口，或绑定域名 + 阿里云免费 SSL 证书
+
+### 备选：Render 免费（数据不持久，仅试用）
+
+仓库含 `render.yaml`，Render 免费实例约 15 分钟无请求休眠、**磁盘不持久（重启/重新部署会清空账号与记录）**，只适合短期试用。
 
 其他部署方式（自购 VPS / 任意 PaaS）：
 

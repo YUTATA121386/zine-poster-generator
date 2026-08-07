@@ -25,13 +25,14 @@ from urllib.parse import urlparse, unquote, parse_qs
 import poster_core
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.environ.get("POSTER_DATA_DIR") or BASE_DIR
 WEB_DIR = os.path.join(BASE_DIR, "web")
-OUT_DIR = os.path.join(BASE_DIR, "outputs")
-TMP_DIR = os.path.join(BASE_DIR, "tmp")
-CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
-HISTORY_FILE = os.path.join(BASE_DIR, "history.jsonl")
-USERS_FILE = os.path.join(BASE_DIR, "users.json")
-UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
+OUT_DIR = os.path.join(DATA_DIR, "outputs")
+TMP_DIR = os.path.join(DATA_DIR, "tmp")
+CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
+HISTORY_FILE = os.path.join(DATA_DIR, "history.jsonl")
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
+UPLOADS_DIR = os.path.join(DATA_DIR, "uploads")
 SESSIONS = {}  # token -> {"username": str, "expires": float}
 
 DEFAULT_CONFIG = {
@@ -596,6 +597,7 @@ def main():
                (sys.argv[1] if len(sys.argv) > 1 else 8765))
     os.makedirs(OUT_DIR, exist_ok=True)
     os.makedirs(TMP_DIR, exist_ok=True)
+    os.makedirs(UPLOADS_DIR, exist_ok=True)
     load_config()  # 首次启动自动迁移百炼 Key
     srv = None
     for p in range(port, port + 10):
