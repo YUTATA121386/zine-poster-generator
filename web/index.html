@@ -660,6 +660,136 @@
     margin-top: 14px;
   }
 
+  /* Admin view */
+  .admin-view {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 24px 22px 60px;
+  }
+  .admin-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .admin-head h2 { font-size: 24px; }
+  .admin-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--ink12);
+  }
+  .admin-tab {
+    padding: 9px 18px;
+    font-size: 14px;
+    color: var(--ink60);
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: color .2s, background .2s;
+  }
+  .admin-tab.active {
+    color: var(--ink);
+    background: rgba(255,255,255,0.5);
+    border-color: var(--ink12);
+  }
+  .admin-body { min-height: 320px; }
+  .admin-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .admin-toolbar select {
+    padding: 7px 10px;
+    font-size: 13px;
+    border: 1px solid var(--ink12);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .admin-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--ink12);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.45);
+  }
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 720px;
+  }
+  .admin-table th, .admin-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--ink08);
+    vertical-align: middle;
+  }
+  .admin-table th {
+    font-size: 12px;
+    color: var(--ink60);
+    font-weight: 600;
+    background: rgba(242,234,218,0.6);
+    white-space: nowrap;
+  }
+  .admin-table tr:last-child td { border-bottom: none; }
+  .admin-thumb {
+    width: 44px;
+    height: 62px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--ink12);
+    display: block;
+  }
+  .admin-ops { white-space: nowrap; }
+  .admin-ops .btn-small { margin-right: 6px; }
+  .btn-small.danger { color: #b3382a; border-color: rgba(179,56,42,0.35); }
+  .btn-small.danger:hover { background: rgba(179,56,42,0.08); }
+  .admin-empty { color: var(--ink60); text-align: center; padding: 26px 0; }
+  .admin-modal-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(42,38,32,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .admin-modal {
+    width: 360px;
+    max-width: 100%;
+    background: var(--card);
+    border: 1px solid var(--ink12);
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(42,38,32,0.2);
+    padding: 22px;
+  }
+  .admin-modal h3 { font-size: 18px; margin-bottom: 14px; }
+  .admin-modal input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    border: 1px solid var(--ink12);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .admin-modal-err { color: #c62828; font-size: 12px; min-height: 16px; margin-bottom: 6px; }
+  .admin-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .admin-modal-actions .btn-primary { margin-right: auto; }
+  @media (max-width: 720px){
+    .admin-view { padding: 16px 12px 60px; }
+    .admin-tab { flex: 1; padding: 9px 8px; text-align: center; }
+  }
+
   /* Drawers */
   .drawer-overlay {
     position: fixed;
@@ -969,6 +1099,7 @@
     </span>
     <span id="userBadge" style="display:none;"></span>
     <button class="icon-btn" id="logoutBtn" style="display:none;">退出</button>
+    <button class="icon-btn" id="openAdminBtn" style="display:none;">管理台</button>
     <button class="icon-btn" id="openHistoryBtn">生成记录</button>
     <button class="icon-btn" id="openSettingsBtn">模型设置</button>
   </div>
@@ -1141,6 +1272,62 @@
     </div>
   </section>
 </main>
+
+<!-- Admin View -->
+<section class="admin-view" id="adminView" style="display:none;">
+  <div class="admin-head">
+    <h2 class="head-lp">管理台</h2>
+    <button class="icon-btn" id="closeAdminBtn">返回</button>
+  </div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-tab="logs">生成记录</button>
+    <button class="admin-tab" data-tab="users">账号</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-pane" id="adminLogsPane">
+      <div class="admin-toolbar">
+        <select id="adminUserFilter"><option value="">全部账号</option></select>
+        <button class="btn-small" id="adminRefreshBtn">刷新</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>成品</th><th>账号</th><th>时间</th><th>主题</th><th>主文案</th><th>强调色</th><th>位置</th><th>操作</th></tr>
+          </thead>
+          <tbody id="adminLogsBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-pane" id="adminUsersPane" style="display:none;">
+      <div class="admin-toolbar">
+        <button class="btn-primary" id="adminNewUserBtn">新建账号</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>账号</th><th>创建时间</th><th>生成数量</th><th>操作</th></tr>
+          </thead>
+          <tbody id="adminUsersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Admin Modal -->
+<div class="admin-modal-mask" id="adminModalMask" style="display:none;">
+  <div class="admin-modal">
+    <h3 class="head-lp" id="adminModalTitle"></h3>
+    <input type="text" id="adminModalUser" placeholder="用户名（2-20 位）" style="display:none;">
+    <input type="password" id="adminModalPass" placeholder="新密码（至少 6 位）" autocomplete="new-password">
+    <input type="password" id="adminModalPass2" placeholder="确认密码" autocomplete="new-password">
+    <div class="admin-modal-err" id="adminModalErr"></div>
+    <div class="admin-modal-actions">
+      <button class="btn-primary" id="adminModalOk">确定</button>
+      <button class="icon-btn" id="adminModalCancel">取消</button>
+    </div>
+  </div>
+</div>
 
 <!-- Settings Drawer -->
 <div class="drawer-overlay" id="drawerOverlay">
@@ -1402,7 +1589,7 @@ function closeDrawer(){
 }
 $('openSettingsBtn').addEventListener('click', openDrawer);
 $('closeSettingsBtn').addEventListener('click', closeDrawer);
-drawerOverlay.addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', e => { if(e.target === drawerOverlay) closeDrawer(); });
 
 function renderSettings(){
   const deployed = !!appConfig.deployed;
@@ -1605,6 +1792,7 @@ function onAuthed(){
   $('userBadge').style.display = '';
   $('logoutBtn').style.display = '';
   $('userBadge').textContent = appUser.username;
+  $('openAdminBtn').style.display = appUser.is_admin ? '' : 'none';
   loadConfig();
 }
 function setLoginMode(mode){
@@ -1662,7 +1850,7 @@ const historyDrawer = $('historyDrawer');
 
 $('openHistoryBtn').addEventListener('click', openHistory);
 $('closeHistoryBtn').addEventListener('click', closeHistory);
-historyOverlay.addEventListener('click', closeHistory);
+historyOverlay.addEventListener('click', e => { if(e.target === historyOverlay) closeHistory(); });
 
 function openHistory(){
   historyOverlay.classList.add('open');
@@ -1736,6 +1924,148 @@ function renderHistory(records, bodyEl){
         .catch(() => { const el = document.getElementById('inimg' + idx); if(el) el.style.display = 'none'; });
     }
   });
+}
+
+/* ---------- Admin view ---------- */
+const adminView = $('adminView');
+let adminModalMode = 'create';
+let adminModalTarget = '';
+
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+$('openAdminBtn').addEventListener('click', () => {
+  adminView.style.display = '';
+  document.querySelector('main').style.display = 'none';
+  loadAdminUsers();
+  loadAdminLogs();
+});
+$('closeAdminBtn').addEventListener('click', () => {
+  adminView.style.display = 'none';
+  document.querySelector('main').style.display = '';
+});
+document.querySelectorAll('.admin-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.admin-tab').forEach(x => x.classList.toggle('active', x === t));
+  $('adminLogsPane').style.display = t.dataset.tab === 'logs' ? '' : 'none';
+  $('adminUsersPane').style.display = t.dataset.tab === 'users' ? '' : 'none';
+}));
+$('adminRefreshBtn').addEventListener('click', loadAdminLogs);
+$('adminUserFilter').addEventListener('change', loadAdminLogs);
+$('adminNewUserBtn').addEventListener('click', () => openAdminModal('create', ''));
+$('adminModalCancel').addEventListener('click', closeAdminModal);
+$('adminModalOk').addEventListener('click', submitAdminModal);
+
+async function loadAdminUsers(){
+  const d = await fetchApi('/api/admin/users', {method:'POST', body:'{}'});
+  const filter = $('adminUserFilter');
+  const prev = filter.value;
+  filter.innerHTML = '<option value="">全部账号</option>' + d.users.map(u =>
+    '<option value="' + escapeHtml(u.username) + '">' + escapeHtml(u.username) + '</option>').join('');
+  filter.value = prev || '';
+  const tbody = $('adminUsersBody');
+  tbody.innerHTML = '';
+  d.users.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + escapeHtml(u.username) + '</td>' +
+      '<td>' + escapeHtml(u.created || '—') + '</td>' +
+      '<td>' + u.gen_count + '</td>' +
+      '<td class="admin-ops">' +
+      '<button class="btn-small" data-act="reset" data-user="' + escapeHtml(u.username) + '">重置密码</button>' +
+      '<button class="btn-small danger" data-act="del" data-user="' + escapeHtml(u.username) + '">删除</button>' +
+      '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadAdminLogs(){
+  const uf = $('adminUserFilter').value;
+  const body = uf ? JSON.stringify({user: uf}) : '{}';
+  const d = await fetchApi('/api/admin/history', {method:'POST', body});
+  const tbody = $('adminLogsBody');
+  tbody.innerHTML = '';
+  if(!d.records.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">暂无记录</td></tr>';
+    return;
+  }
+  d.records.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + (r.url ? '<img class="admin-thumb" src="' + r.url + '?t=' + Date.now() + '" onerror="this.style.display=\'none\'" alt="">' : '') + '</td>' +
+      '<td>' + escapeHtml(r.user || '') + '</td>' +
+      '<td>' + escapeHtml(r.time || '') + '</td>' +
+      '<td>' + escapeHtml(r.theme || '') + '</td>' +
+      '<td>' + escapeHtml(r.title || '') + '</td>' +
+      '<td>' + escapeHtml(r.accent || '') + '</td>' +
+      '<td>' + escapeHtml(positionLabelFromValue(r.position)) + '</td>' +
+      '<td class="admin-ops"><button class="btn-small danger" data-act="del" data-id="' + escapeHtml(r.id) + '">删除</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+$('adminUsersBody').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-act]');
+  if(!btn) return;
+  const user = btn.dataset.user;
+  if(btn.dataset.act === 'del'){
+    if(!confirm('删除账号 ' + user + '？其所有生成记录也会一并删除。')) return;
+    try{
+      await fetchApi('/api/admin/users/delete', {method:'POST', body: JSON.stringify({username: user})});
+      showStatus('账号已删除', 'ok');
+    }catch(err){ showStatus('删除失败：' + err.message, 'error'); return; }
+    loadAdminUsers();
+    loadAdminLogs();
+  }else if(btn.dataset.act === 'reset'){
+    openAdminModal('reset', user);
+  }
+});
+
+$('adminLogsBody').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-act="del"]');
+  if(!btn) return;
+  if(!confirm('确定删除这条生成记录？')) return;
+  try{
+    await fetchApi('/api/admin/history/delete', {method:'POST', body: JSON.stringify({id: btn.dataset.id})});
+    showStatus('记录已删除', 'ok');
+  }catch(err){ showStatus('删除失败：' + err.message, 'error'); return; }
+  loadAdminLogs();
+});
+
+function openAdminModal(mode, target){
+  adminModalMode = mode;
+  adminModalTarget = target;
+  $('adminModalTitle').textContent = mode === 'create' ? '新建账号' : '重置密码 · ' + target;
+  $('adminModalUser').style.display = mode === 'create' ? '' : 'none';
+  $('adminModalUser').value = mode === 'create' ? '' : target;
+  $('adminModalPass').value = '';
+  $('adminModalPass2').value = '';
+  $('adminModalErr').textContent = '';
+  $('adminModalMask').style.display = 'flex';
+  (mode === 'create' ? $('adminModalUser') : $('adminModalPass')).focus();
+}
+function closeAdminModal(){
+  $('adminModalMask').style.display = 'none';
+}
+async function submitAdminModal(){
+  const username = $('adminModalUser').value.trim();
+  const pass = $('adminModalPass').value;
+  const pass2 = $('adminModalPass2').value;
+  if(pass.length < 6){ $('adminModalErr').textContent = '密码至少 6 位'; return; }
+  if(pass !== pass2){ $('adminModalErr').textContent = '两次输入的密码不一致'; return; }
+  try{
+    if(adminModalMode === 'create'){
+      await fetchApi('/api/admin/users/create', {method:'POST', body: JSON.stringify({username, password: pass})});
+      showStatus('账号已创建', 'ok');
+    }else{
+      await fetchApi('/api/admin/users/set-password', {method:'POST', body: JSON.stringify({username: adminModalTarget, password: pass})});
+      showStatus('密码已重置', 'ok');
+    }
+    closeAdminModal();
+    loadAdminUsers();
+  }catch(err){
+    $('adminModalErr').textContent = err.message;
+  }
 }
 
 /* ---------- DeepSeek copy inline ---------- */

@@ -136,7 +136,12 @@ def admin_token_of(cfg):
     return (os.environ.get("POSTER_ADMIN_TOKEN") or cfg.get("admin_token") or "").strip()
 
 
+def new_history_id():
+    return "%x" % int(time.time() * 1000) + secrets.token_hex(3)
+
+
 def append_history(rec):
+    rec.setdefault("id", new_history_id())
     try:
         with _LOCK:
             with open(HISTORY_FILE, "a", encoding="utf-8") as f:
@@ -152,6 +157,37 @@ def load_history(limit=200):
     except (OSError, ValueError):
         return []
     return list(reversed(recs[-limit:]))
+
+
+def load_all_history():
+    """读取全部记录（文件原顺序），供管理操作使用。"""
+    try:
+        with open(HISTORY_FILE, encoding="utf-8") as f:
+            return [json.loads(line) for line in f if line.strip()]
+    except (OSError, ValueError):
+        return []
+
+
+def rewrite_history(recs):
+    """原子重写 history.jsonl（调用方需持 _LOCK）。"""
+    tmp = HISTORY_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        for r in recs:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    os.replace(tmp, HISTORY_FILE)
+
+
+def ensure_history_ids():
+    """为旧记录补齐 id 字段（删除需要稳定定位）。"""
+    with _LOCK:
+        recs = load_all_history()
+        changed = False
+        for r in recs:
+            if not r.get("id"):
+                r["id"] = new_history_id()
+                changed = True
+        if changed:
+            rewrite_history(recs)
 
 
 # ---------- 异步生成任务 ----------
@@ -508,6 +544,18 @@ class Handler(BaseHTTPRequestHandler):
                 self._post_me(raw)
             elif path == "/api/history":
                 self._post_history(raw)
+            elif path == "/api/admin/users":
+                self._post_admin_users(raw)
+            elif path == "/api/admin/users/create":
+                self._post_admin_users_create(raw)
+            elif path == "/api/admin/users/delete":
+                self._post_admin_users_delete(raw)
+            elif path == "/api/admin/users/set-password":
+                self._post_admin_users_set_password(raw)
+            elif path == "/api/admin/history":
+                self._post_admin_history(raw)
+            elif path == "/api/admin/history/delete":
+                self._post_admin_history_delete(raw)
             elif path == "/api/analyze":
                 self._post_analyze(raw)
             elif path == "/api/copy":
@@ -616,6 +664,123 @@ class Handler(BaseHTTPRequestHandler):
         if not is_admin:
             recs = [r for r in recs if r.get("user") == username]
         self._json({"records": recs, "is_admin": is_admin})
+
+    def _require_admin(self):
+        username = self._require_user()
+        if not username:
+            return None
+        users = load_users()
+        if not users.get(username, {}).get("admin"):
+            self._json({"error": "无权访问"}, 403)
+            return None
+        return username
+
+    def _post_admin_users(self, raw):
+        if not self._require_admin():
+            return
+        users = load_users()
+        recs = load_all_history()
+        counts = {}
+        for r in recs:
+            counts[r.get("user", "")] = counts.get(r.get("user", ""), 0) + 1
+        lst = [{"username": u, "created": v.get("created", ""),
+                "gen_count": counts.get(u, 0)}
+               for u, v in users.items()]
+        lst.sort(key=lambda x: x["created"])
+        self._json({"users": lst})
+
+    def _post_admin_users_create(self, raw):
+        if not self._require_admin():
+            return
+        data = self._load_json(raw)
+        username = str(data.get("username") or "").strip()
+        password = str(data.get("password") or "")
+        if not re.match(r"^[\w\u4e00-\u9fa5-]{2,20}$", username):
+            self._json({"error": "用户名需 2-20 位（中文/字母/数字/下划线/连字符）"}, 400)
+            return
+        if len(password) < 6:
+            self._json({"error": "密码至少 6 位"}, 400)
+            return
+        users = load_users()
+        if username in users:
+            self._json({"error": "用户名已存在"}, 400)
+            return
+        users[username] = {"pwd": hash_password(password), "admin": False,
+                           "created": time.strftime("%Y-%m-%d %H:%M:%S")}
+        save_users(users)
+        self._json({"ok": True})
+
+    def _post_admin_users_delete(self, raw):
+        username = self._require_admin()
+        if not username:
+            return
+        data = self._load_json(raw)
+        target = str(data.get("username") or "").strip()
+        users = load_users()
+        if target == username:
+            self._json({"error": "不能删除当前账号"}, 400)
+            return
+        if target not in users:
+            self._json({"error": "账号不存在"}, 404)
+            return
+        users.pop(target)
+        save_users(users)
+        # 连带删除该用户的所有生成记录
+        with _LOCK:
+            recs = load_all_history()
+            recs = [r for r in recs if r.get("user") != target]
+            rewrite_history(recs)
+        # 使其所有会话失效
+        for tok in [k for k, v in SESSIONS.items() if v.get("username") == target]:
+            SESSIONS.pop(tok, None)
+        save_sessions()
+        self._json({"ok": True})
+
+    def _post_admin_users_set_password(self, raw):
+        if not self._require_admin():
+            return
+        data = self._load_json(raw)
+        username = str(data.get("username") or "").strip()
+        password = str(data.get("password") or "")
+        if len(password) < 6:
+            self._json({"error": "密码至少 6 位"}, 400)
+            return
+        users = load_users()
+        if username not in users:
+            self._json({"error": "账号不存在"}, 404)
+            return
+        users[username]["pwd"] = hash_password(password)
+        save_users(users)
+        self._json({"ok": True})
+
+    def _post_admin_history(self, raw):
+        if not self._require_admin():
+            return
+        data = self._load_json(raw)
+        ensure_history_ids()
+        recs = load_all_history()
+        user_filter = str(data.get("user") or "").strip()
+        if user_filter:
+            recs = [r for r in recs if r.get("user") == user_filter]
+        recs.reverse()
+        self._json({"records": recs})
+
+    def _post_admin_history_delete(self, raw):
+        if not self._require_admin():
+            return
+        data = self._load_json(raw)
+        rid = str(data.get("id") or "")
+        if not rid:
+            self._json({"error": "缺少记录 id"}, 400)
+            return
+        with _LOCK:
+            recs = load_all_history()
+            keep = [r for r in recs if r.get("id") != rid]
+            if len(keep) == len(recs):
+                self._json({"error": "记录不存在"}, 404)
+                return
+            rewrite_history(keep)
+        self._json({"ok": True})
 
     def _post_open_folder(self, raw):
         if not self._require_user():
