@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: zine-poster-generator
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python poster_server.py
+    healthCheckPath: /
+    envVars:
+      - key: POSTER_DEPLOYED
+        value: "1"
+      - key: POSTER_HOST
+        value: 0.0.0.0
+      - key: POSTER_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false

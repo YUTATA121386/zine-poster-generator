@@ -389,7 +389,8 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     deployed = is_deployed()
     host = os.environ.get("POSTER_HOST") or ("0.0.0.0" if deployed else "127.0.0.1")
-    port = int(os.environ.get("POSTER_PORT") or (sys.argv[1] if len(sys.argv) > 1 else 8765))
+    port = int(os.environ.get("POSTER_PORT") or os.environ.get("PORT") or
+               (sys.argv[1] if len(sys.argv) > 1 else 8765))
     os.makedirs(OUT_DIR, exist_ok=True)
     os.makedirs(TMP_DIR, exist_ok=True)
     load_config()  # 首次启动自动迁移百炼 Key
