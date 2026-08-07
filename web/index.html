@@ -472,6 +472,16 @@ textarea{
   font-size:12px; color:var(--ink-40); margin:10px 0 0;
 }
 body.drawer-open{ overflow:hidden; }
+.hist-item{
+  display:flex; gap:12px; padding:12px 0;
+  border-bottom:1px solid rgba(42,38,32,.08);
+}
+.hist-imgs{ display:flex; gap:10px; flex:none; }
+.hist-imgs img{
+  width:110px; height:auto;
+  border:1px solid rgba(42,38,32,.15); border-radius:6px;
+}
+.hist-meta{ font-size:13px; line-height:1.7; color:#3a352c; min-width:0; }
 
 /* ---------- 登录 ---------- */
 .login-overlay{
@@ -502,18 +512,40 @@ body.drawer-open{ overflow:hidden; }
 
 /* ---------- 移动端 ---------- */
 @media (max-width: 760px){
-  header{ padding:12px 14px; flex-wrap:wrap; gap:8px; }
-  .actions{ width:100%; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+  html,body{ min-width:0; }
+  body{ overflow-x:hidden; }
+  header{ padding:10px 12px; flex-wrap:wrap; gap:6px; }
+  header .actions{ width:100%; justify-content:flex-end; gap:8px; }
   .logo{ font-size:15px; }
-  main{ padding:12px; }
+  main{ padding:12px 12px calc(24px + env(safe-area-inset-bottom)); }
   .grid{ grid-template-columns:1fr !important; gap:14px; }
   .card{ padding:14px; }
+  .section-title{ font-size:16px; margin-bottom:14px; }
   .drawer{ width:100%; }
+  .drawer-head{ padding:14px 16px; }
   .drawer-body{ padding:16px; }
+  .drawer-foot{ padding:14px 16px calc(14px + env(safe-area-inset-bottom)); }
   .btn-primary, .btn-small, .icon-btn{ min-height:44px; font-size:15px; padding:10px 14px; }
-  .upload-zone{ min-height:150px; padding:24px 16px; }
+  .btn-small{ font-size:13px; padding:8px 12px; }
+  .upload-zone{ min-height:140px; padding:22px 14px; }
   input, select, textarea{ font-size:16px !important; }
   .status-pill{ font-size:12px; }
+  .ds-row{ gap:6px; }
+  .accent-field{ grid-template-columns:1fr 112px; gap:8px; }
+  .info-grid{ gap:8px; }
+  .info-cell{ padding:10px 12px; }
+  .info-cell .value{ font-size:14px; }
+  .pos-grid{ grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); }
+  .thumb-wrap img{ max-height:40vh; }
+  .result-frame{ padding:8px; }
+  .result-frame img{ max-height:72vh; }
+  .result-actions{ gap:10px; margin-top:12px; }
+  .login-card{ padding:26px 22px; }
+  .login-card h1{ font-size:20px; }
+  .hist-item{ gap:10px; }
+  .hist-imgs img{ width:84px; }
+  .hist-meta{ font-size:12px; }
+  .progress-meta{ font-size:11px; }
 }
 </style>
 </head>
@@ -1234,7 +1266,7 @@ function renderHistory(records, bodyEl){
   bodyEl.innerHTML = '';
   records.forEach((r, idx) => {
     const item = document.createElement('div');
-    item.style.cssText = 'display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(42,38,32,.08);';
+    item.className = 'hist-item';
     const meta = [
       r.user ? '<b>' + r.user + '</b>' : '',
       r.time || '',
@@ -1248,19 +1280,19 @@ function renderHistory(records, bodyEl){
     const imgs = [];
     if(r.input_url){
       imgs.push('<div style="text-align:center;"><div style="font-size:11px;color:#9a938a;margin-bottom:2px;">原图</div>' +
-        '<img id="inimg' + idx + '" style="width:110px;height:auto;border:1px solid rgba(42,38,32,.15);border-radius:6px;" alt="原图"></div>');
+        '<img id="inimg' + idx + '" class="hist-img" alt="原图"></div>');
     }
     if(r.url){
       imgs.push('<div style="text-align:center;"><div style="font-size:11px;color:#9a938a;margin-bottom:2px;">成品</div>' +
-        '<img src="' + r.url + '?t=' + Date.now() + '" style="width:110px;height:auto;border:1px solid rgba(42,38,32,.15);border-radius:6px;" onerror="this.style.display=\'none\'"></div>');
+        '<img src="' + r.url + '?t=' + Date.now() + '" class="hist-img" onerror="this.style.display=\'none\'"></div>');
     }
     const promptBlock = r.prompt
       ? '<details style="margin-top:8px;"><summary style="cursor:pointer;font-size:12px;color:#6f675c;">查看提示词</summary>' +
         '<pre style="white-space:pre-wrap;font-size:11px;background:#f6f1e6;border-radius:6px;padding:8px;margin:6px 0 0;max-height:180px;overflow:auto;color:#4a443b;">' +
         r.prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre></details>'
       : '';
-    item.innerHTML = (imgs.length ? '<div style="display:flex;gap:10px;flex:none;">' + imgs.join('') + '</div>' : '') +
-      '<div style="font-size:13px;line-height:1.7;color:#3a352c;min-width:0;">' + meta + promptBlock + '</div>';
+    item.innerHTML = (imgs.length ? '<div class="hist-imgs">' + imgs.join('') + '</div>' : '') +
+      '<div class="hist-meta">' + meta + promptBlock + '</div>';
     bodyEl.appendChild(item);
     if(r.input_url){
       const name = r.input_url.split('/').pop();
