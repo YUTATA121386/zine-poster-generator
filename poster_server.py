@@ -658,12 +658,8 @@ class Handler(BaseHTTPRequestHandler):
         username = self._require_user()
         if not username:
             return
-        users = load_users()
-        is_admin = bool(users.get(username, {}).get("admin"))
-        recs = load_history()
-        if not is_admin:
-            recs = [r for r in recs if r.get("user") == username]
-        self._json({"records": recs, "is_admin": is_admin})
+        recs = [r for r in load_history() if r.get("user") == username]
+        self._json({"records": recs})
 
     def _require_admin(self):
         username = self._require_user()
