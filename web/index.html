@@ -649,19 +649,17 @@ body.drawer-open{ overflow:hidden; }
       </div>
     </section>
   </main>
-  <div style="text-align:center;font-size:12px;color:#9a938a;padding:8px 0 16px;">使用本站即表示同意：生成内容与参数会被服务器记录，仅用于站主管理与统计。</div>
 </div>
 
 <div class="login-overlay" id="loginOverlay" style="display:none;">
   <div class="login-card">
     <h1 class="head-lp">ZINE 海报生成器</h1>
-    <p class="sub">登录后使用 · 生成内容与图片会被记录，仅本人与管理员可见</p>
+    <p class="sub">登录后开始创作</p>
     <input type="text" id="loginUser" placeholder="用户名" autocomplete="username">
     <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password">
     <div class="login-err" id="loginErr"></div>
     <button class="btn-primary" id="loginBtn">登 录</button>
     <div class="login-switch">没有账号？<a id="toRegister">注册新账号</a></div>
-    <div class="login-switch" style="margin-top:8px;color:#9a938a;">第一个注册的账号为管理员</div>
   </div>
 </div>
 
@@ -709,10 +707,6 @@ body.drawer-open{ overflow:hidden; }
           <option value="file">使用原文件名</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="small-label">管理密码（查看生成记录）</label>
-        <input type="password" id="adminTokenInput" placeholder="留空 = 本机免密（线上务必设置）">
-      </div>
       <p class="small-label" id="deployedNote" style="display:none;color:#c62828;">线上模式：API Key 与输出目录由服务器环境变量配置，此处不可修改。</p>
     </div>
   </div>
@@ -729,9 +723,6 @@ body.drawer-open{ overflow:hidden; }
     <button class="close-drawer" id="closeHistoryBtn">×</button>
   </div>
   <div class="drawer-body" id="historyBody"></div>
-  <div class="drawer-foot">
-    <p>记录仅本人与管理员可见；原图与提示词仅管理员可看全部。</p>
-  </div>
 </div>
 
 <script>
@@ -750,7 +741,6 @@ let appConfig = {
   output_dir:'',
   naming:'auto',
   deployed:false,
-  admin_required:false,
   size:'900*1500'
 };
 let currentImage = null;
@@ -850,10 +840,6 @@ function renderSettings(){
   od.value = appConfig.output_dir || '';
   od.placeholder = deployed ? '线上模式：由服务器配置' : '留空 = 默认 outputs 目录';
   $('namingSelect').value = appConfig.naming || 'auto';
-  const at = $('adminTokenInput');
-  at.disabled = deployed;
-  at.value = '';
-  at.placeholder = deployed ? '线上模式：由服务器环境变量配置' : '留空 = 本机免密（线上务必设置）';
   const b = $('bailianKey');
   if(appConfig.bailian.key_set){
     b.value = '';
@@ -894,8 +880,6 @@ $('saveSettingsBtn').addEventListener('click', async () => {
   const odv = $('outputDirInput').value.trim();
   if(odv) body.output_dir = odv;
   body.naming = $('namingSelect').value;
-  const atv = $('adminTokenInput').value.trim();
-  if(atv) body.admin_token = atv;
   try{
     await fetchApi('/api/config', {method:'POST', body:JSON.stringify(body)});
     showStatus('配置已保存', 'ok');
@@ -1047,7 +1031,7 @@ function onAuthed(){
   $('loginOverlay').style.display = 'none';
   $('userBadge').style.display = '';
   $('logoutBtn').style.display = '';
-  $('userBadge').textContent = (appUser.is_admin ? '★ ' : '') + appUser.username + (appUser.is_admin ? '（管理员）' : '');
+  $('userBadge').textContent = appUser.username;
   loadConfig();
 }
 function setLoginMode(mode){
