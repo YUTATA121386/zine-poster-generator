@@ -2259,20 +2259,6 @@ async function generatePoster(){
   }finally{
     setGenerateState(false);
   }
-
-  try{
-    const data = await fetchApi('/api/generate', {method:'POST', body:JSON.stringify(body)});
-    showStatus('正在接收并保存结果…', 'info');
-    generatedUrl = data.url;
-    resultImg.src = data.url + '?t=' + Date.now();
-    resultFrame.style.display = 'block';
-    resultActions.style.display = 'flex';
-    showStatus('生成完成 · ' + (data.info ? JSON.stringify(data.info) : ''), 'ok');
-  }catch(err){
-    showStatus('生成失败：'+err.message, 'error');
-  }finally{
-    setGenerateState(false);
-  }
 }
 
 /* ---------- Open output folder ---------- */
