@@ -1,788 +1,1218 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZINE 海报生成器 · 档案风</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZINE 海报生成器</title>
 <style>
-:root{
-  --bg:#F2EADA;
-  --bg-2:#EFE7D8;
-  --paper:#FDFBF6;
-  --ink:#2A2620;
-  --ink-60:rgba(42,38,32,0.60);
-  --ink-40:rgba(42,38,32,0.40);
-  --ink-12:rgba(42,38,32,0.12);
-  --ink-6:rgba(42,38,32,0.06);
-  --accent:#C8452A;
-  --accent-dark:#A53822;
-  --ok:#3A8C5D;
-  --warn:#B8892A;
-  --err:#C8452A;
-  --radius:10px;
-  --shadow:0 2px 14px rgba(42,38,32,0.06);
-  --font-serif:Georgia,'Times New Roman','Songti SC','SimSun',serif;
-  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;
-}
+  :root {
+    --paper: #F2EADA;
+    --paper2: #EFE7D8;
+    --card: #FAF6EE;
+    --ink: #2A2620;
+    --ink80: rgba(42,38,32,0.80);
+    --ink60: rgba(42,38,32,0.60);
+    --ink40: rgba(42,38,32,0.40);
+    --ink25: rgba(42,38,32,0.25);
+    --ink12: rgba(42,38,32,0.12);
+    --ink08: rgba(42,38,32,0.08);
+    --ink04: rgba(42,38,32,0.04);
+    --accent: #C8452A;
+    --accentDark: #A33620;
+    --accentLight: #E26B52;
+    --sepia: #8C7B66;
+    --sepiaLine: rgba(140,123,102,0.35);
+    --ok: #3A6B3F;
+    --warn: #B8860B;
+    --radius: 6px;
+    --shadow: 0 10px 30px rgba(42,38,32,0.06);
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    --font-serif: Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  }
 
-* { box-sizing:border-box; }
-html,body { height:100%; }
-body{
-  margin:0;
-  min-width:1180px;
-  font-family:var(--font-sans);
-  color:var(--ink);
-  background:linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 100%);
-  line-height:1.6;
-}
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:-1;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-}
+  * { box-sizing: border-box; }
 
-/* Typography & atoms */
-h1,h2,h3,.serif{
-  font-family:var(--font-serif);
-  font-weight:600;
-  letter-spacing:0.02em;
-}
-.head-lp{
-  text-shadow:0 1px 0 rgba(255,255,255,0.55), 0 -1px 0 rgba(0,0,0,0.06);
-}
-.small-label{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:0.08em;
-  color:var(--ink-60);
-  margin-bottom:6px;
-  display:block;
-}
-.card{
-  background:var(--paper);
-  border:1px solid var(--ink-12);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:24px;
-}
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
 
-/* Layout */
-.app{
-  min-height:100%;
-  display:flex;
-  flex-direction:column;
-}
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:16px 32px;
-  border-bottom:1px solid var(--ink-12);
-  background:rgba(253,251,246,0.78);
-  backdrop-filter:blur(4px);
-}
-.logo{
-  font-family:var(--font-serif);
-  font-size:20px;
-  color:var(--ink);
-}
-header .actions{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-.status-pill{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:13px;
-  color:var(--ink-60);
-}
-.status-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:#A6A099;
-  box-shadow:0 0 0 3px rgba(166,160,153,0.18);
-  transition:.2s;
-}
-.status-dot.online{
-  background:var(--ok);
-  box-shadow:0 0 0 3px rgba(58,140,93,0.18);
-}
-.icon-btn{
-  background:transparent;
-  border:1px solid var(--ink-12);
-  color:var(--ink);
-  padding:7px 14px;
-  border-radius:6px;
-  font-size:13px;
-  cursor:pointer;
-  transition:.15s;
-}
-.icon-btn:hover{
-  border-color:var(--ink-40);
-  background:rgba(42,38,32,0.03);
-}
+  body {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
 
-main{
-  flex:1;
-  padding:28px 32px 40px;
-}
-.grid{
-  display:grid;
-  grid-template-columns:1.05fr 0.95fr;
-  gap:24px;
-  max-width:1360px;
-  margin:0 auto;
-}
-.section-title{
-  font-size:18px;
-  margin:0 0 18px;
-  padding-bottom:10px;
-  border-bottom:1px solid var(--ink-12);
-}
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+  }
 
-/* Upload */
-.upload-zone{
-  border:1.5px dashed var(--ink-12);
-  border-radius:var(--radius);
-  background:rgba(42,38,32,0.02);
-  padding:34px 24px;
-  text-align:center;
-  cursor:pointer;
-  transition:.15s;
-}
-.upload-zone:hover{
-  border-color:rgba(200,69,42,0.45);
-  background:rgba(200,69,42,0.02);
-}
-.upload-zone .big{
-  font-size:15px;
-  color:var(--ink);
-}
-.upload-zone .hint{
-  font-size:12px;
-  color:var(--ink-40);
-  margin-top:6px;
-}
-.thumb-wrap{
-  display:none;
-  border:1px solid var(--ink-12);
-  border-radius:var(--radius);
-  padding:10px;
-  background:#fff;
-  text-align:center;
-}
-.thumb-wrap img{
-  max-width:100%;
-  max-height:260px;
-  object-fit:contain;
-  border-radius:4px;
-}
-.thumb-meta{
-  font-size:12px;
-  color:var(--ink-40);
-  margin-top:8px;
-}
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+    margin: 0;
+    color: var(--ink);
+  }
 
-/* Analysis */
-.analysis-loading{
-  display:none;
-  align-items:center;
-  gap:10px;
-  font-size:13px;
-  color:var(--ink-60);
-  margin:14px 0 8px;
-}
-.spinner{
-  width:16px;height:16px;
-  border:2px solid var(--ink-12);
-  border-top-color:var(--accent);
-  border-radius:50%;
-  animation:spin .8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
+  .head-lp {
+    text-shadow: 0 1px 0 rgba(255,255,255,0.55), 0 -1px 0 rgba(0,0,0,0.06);
+  }
 
-.info-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  margin-top:16px;
-}
-.info-cell{
-  background:var(--ink-6);
-  border-radius:8px;
-  padding:12px 14px;
-}
-.info-cell .label{
-  display:block;
-  font-size:11px;
-  color:var(--ink-40);
-  letter-spacing:0.04em;
-  margin-bottom:2px;
-}
-.info-cell .value{
-  font-size:15px;
-  font-weight:500;
-}
-.accent-row{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:16px;
-  padding:12px 14px;
-  background:var(--ink-6);
-  border-radius:8px;
-}
-.accent-swatch{
-  width:28px;height:28px;border-radius:50%;
-  border:1px solid var(--ink-12);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.35);
-}
-.accent-name{ font-weight:500; }
-.accent-hex{ font-size:12px; color:var(--ink-40); font-family:monospace; }
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--sepiaLine);
+  }
 
-.position-wrap{ margin-top:18px; }
-.pos-label{ font-size:12px; color:var(--ink-60); margin-bottom:8px; }
-.pos-grid{
-  display:grid;
-  grid-template-columns:repeat(3,42px);
-  grid-template-rows:repeat(3,42px);
-  gap:5px;
-}
-.pos-cell{
-  border:1px solid var(--ink-12);
-  border-radius:5px;
-  background:rgba(255,255,255,0.5);
-}
-.pos-cell.active{
-  background:rgba(200,69,42,0.18);
-  border-color:var(--accent);
-}
+  .small-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--sepia);
+    margin-bottom: 7px;
+    font-weight: 600;
+  }
 
-/* Form */
-.form-group{
-  margin-bottom:18px;
-}
-.form-row{
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-}
-input[type=text],input[type=password],select,textarea{
-  width:100%;
-  padding:9px 11px;
-  font-size:14px;
-  font-family:var(--font-sans);
-  color:var(--ink);
-  background:#fff;
-  border:1px solid var(--ink-12);
-  border-radius:7px;
-  outline:none;
-  transition:.15s;
-}
-input[type=text]:focus,input[type=password]:focus,select:focus,textarea:focus{
-  border-color:var(--ink-40);
-  box-shadow:0 0 0 3px rgba(42,38,32,0.05);
-}
-input::placeholder,textarea::placeholder{
-  color:#A9A39A;
-  font-size:13px;
-}
-select{ cursor:pointer; }
-textarea{
-  min-height:72px;
-  resize:vertical;
-}
-.ds-row{
-  display:flex; gap:8px;
-}
-.ds-row input{ flex:1; }
-.btn-small{
-  white-space:nowrap;
-  padding:8px 12px;
-  font-size:13px;
-  border-radius:6px;
-  border:1px solid var(--accent);
-  color:var(--accent);
-  background:transparent;
-  cursor:pointer;
-  transition:.15s;
-}
-.btn-small:hover{
-  background:rgba(200,69,42,0.06);
-}
-.inline-copy{
-  display:none;
-  align-items:center;
-  gap:8px;
-  margin-top:8px;
-}
-.inline-copy input{ flex:1; }
-.inline-copy.show{ display:flex; }
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="color"],
+  select,
+  textarea {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--ink);
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--ink12);
+    border-radius: var(--radius);
+    padding: 11px 12px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
 
-.accent-field{
-  display:grid;
-  grid-template-columns:1fr 120px;
-  gap:10px;
-}
-.custom-hex-wrap{
-  display:flex; align-items:center; gap:6px;
-}
-.custom-hex-wrap input{
-  font-family:monospace;
-}
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,69,42,0.12);
+    background: rgba(255,255,255,0.75);
+  }
 
-.btn-primary{
-  width:100%;
-  padding:13px 18px;
-  font-size:15px;
-  font-weight:600;
-  color:#fff;
-  background:var(--accent);
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  transition:.15s;
-  display:flex; align-items:center; justify-content:center; gap:8px;
-}
-.btn-primary:hover:not(:disabled){
-  background:var(--accent-dark);
-}
-.btn-primary:disabled{
-  opacity:.65;
-  cursor:not-allowed;
-}
+  textarea {
+    min-height: 88px;
+    resize: vertical;
+  }
 
-/* Result */
-.result-area{
-  max-width:1360px;
-  margin:24px auto 0;
-}
-.result-status{
-  font-size:13px;
-  color:var(--ink-60);
-  min-height:20px;
-  margin-bottom:12px;
-}
-.result-status.error{ color:var(--err); }
-.result-status.ok{ color:var(--ok); }
-.progress-wrap{
-  margin-bottom:12px;
-}
-.progress-track{
-  height:6px;
-  border:1px solid var(--ink-12);
-  border-radius:3px;
-  background:rgba(42,38,32,0.05);
-  overflow:hidden;
-}
-.progress-bar{
-  height:100%;
-  width:0%;
-  background:var(--accent);
-  border-radius:3px;
-  transition:width .4s ease;
-}
-.progress-meta{
-  display:flex;
-  justify-content:space-between;
-  font-size:12px;
-  color:var(--ink-60);
-  margin-top:6px;
-}
-.result-frame{
-  display:none;
-  border:1px solid var(--ink-12);
-  border-radius:var(--radius);
-  background:#fff;
-  padding:14px;
-  box-shadow:var(--shadow);
-  text-align:center;
-}
-.result-frame img{
-  max-width:100%;
-  max-height:520px;
-  object-fit:contain;
-  border-radius:4px;
-}
-.result-actions{
-  display:flex; gap:12px; justify-content:center;
-  margin-top:16px;
-}
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%232A2620' d='M6 7.5L0 1.5l1.2-1.2L6 5.1l4.8-4.8L12 1.5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+  }
 
-/* Drawer */
-.drawer-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(42,38,32,0.22);
-  opacity:0;
-  visibility:hidden;
-  transition:.2s;
-  z-index:100;
-}
-.drawer-overlay.open{
-  opacity:1;
-  visibility:visible;
-}
-.drawer{
-  position:fixed;
-  top:0; right:0; bottom:0;
-  width:420px;
-  max-width:100%;
-  background:var(--paper);
-  border-left:1px solid var(--ink-12);
-  box-shadow:-8px 0 30px rgba(42,38,32,0.12);
-  transform:translateX(100%);
-  transition:.25s ease-out;
-  z-index:101;
-  display:flex; flex-direction:column;
-}
-.drawer-overlay.open + .drawer,
-.drawer.open{
-  transform:translateX(0);
-}
-.drawer-head{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:18px 24px;
-  border-bottom:1px solid var(--ink-12);
-}
-.drawer-head h2{ margin:0; font-size:18px; }
-.close-drawer{
-  background:none; border:none; font-size:22px; color:var(--ink-60);
-  cursor:pointer; line-height:1;
-}
-.drawer-body{
-  flex:1; overflow-y:auto; padding:24px;
-}
-.drawer-block{
-  margin-bottom:28px;
-}
-.drawer-block h3{
-  font-size:15px; margin:0 0 14px;
-}
-.drawer-foot{
-  padding:18px 24px;
-  border-top:1px solid var(--ink-12);
-  background:rgba(42,38,32,0.02);
-}
-.drawer-foot p{
-  font-size:12px; color:var(--ink-40); margin:10px 0 0;
-}
-body.drawer-open{ overflow:hidden; }
-.hist-item{
-  display:flex; gap:12px; padding:12px 0;
-  border-bottom:1px solid rgba(42,38,32,.08);
-}
-.hist-imgs{ display:flex; gap:10px; flex:none; }
-.hist-imgs img{
-  width:110px; height:auto;
-  border:1px solid rgba(42,38,32,.15); border-radius:6px;
-}
-.hist-meta{ font-size:13px; line-height:1.7; color:#3a352c; min-width:0; }
+  .btn-primary,
+  .btn-small,
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: transform .1s, background .2s, box-shadow .2s;
+  }
 
-/* ---------- 登录 ---------- */
-.login-overlay{
-  position:fixed; inset:0; z-index:200;
-  background:var(--bg);
-  display:flex; align-items:center; justify-content:center;
-}
-.login-card{
-  background:#fffdf7;
-  border:1px solid rgba(42,38,32,.15);
-  border-radius:14px;
-  padding:36px 40px;
-  width:360px; max-width:92vw;
-  box-shadow:0 12px 34px rgba(42,38,32,.10);
-}
-.login-card h1{ margin:0 0 6px; font-size:22px; }
-.login-card .sub{ font-size:13px; color:#8a8378; margin:0 0 22px; }
-.login-card input{
-  display:block; width:100%; box-sizing:border-box;
-  margin-bottom:12px; padding:11px 12px;
-  border:1px solid rgba(42,38,32,.18); border-radius:8px;
-  font-size:15px; background:#fffdf7; font-family:inherit;
-}
-.login-err{ color:#c62828; font-size:13px; min-height:20px; margin-bottom:6px; }
-.login-card .btn-primary{ width:100%; padding:12px; font-size:15px; border-radius:8px; }
-.login-switch{ text-align:center; margin-top:14px; font-size:13px; color:#6f675c; }
-.login-switch a{ color:var(--accent); cursor:pointer; text-decoration:underline; }
+  .btn-primary {
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 4px 12px rgba(200,69,42,0.22);
+  }
 
-/* ---------- 移动端 ---------- */
-@media (max-width: 760px){
-  html,body{ min-width:0; }
-  body{ overflow-x:hidden; }
-  header{ padding:10px 12px; flex-wrap:wrap; gap:6px; }
-  header .actions{ width:100%; justify-content:flex-end; gap:8px; }
-  .logo{ font-size:15px; }
-  main{ padding:12px 12px calc(24px + env(safe-area-inset-bottom)); }
-  .grid{ grid-template-columns:1fr !important; gap:14px; }
-  .card{ padding:14px; }
-  .section-title{ font-size:16px; margin-bottom:14px; }
-  .drawer{ width:100%; }
-  .drawer-head{ padding:14px 16px; }
-  .drawer-body{ padding:16px; }
-  .drawer-foot{ padding:14px 16px calc(14px + env(safe-area-inset-bottom)); }
-  .btn-primary, .btn-small, .icon-btn{ min-height:44px; font-size:15px; padding:10px 14px; }
-  .btn-small{ font-size:13px; padding:8px 12px; }
-  .upload-zone{ min-height:140px; padding:22px 14px; }
-  input, select, textarea{ font-size:16px !important; }
-  .status-pill{ font-size:12px; }
-  .ds-row{ gap:6px; }
-  .accent-field{ grid-template-columns:1fr 112px; gap:8px; }
-  .info-grid{ gap:8px; }
-  .info-cell{ padding:10px 12px; }
-  .info-cell .value{ font-size:14px; }
-  .pos-grid{ grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); }
-  .thumb-wrap img{ max-height:40vh; }
-  .result-frame{ padding:8px; }
-  .result-frame img{ max-height:72vh; }
-  .result-actions{ gap:10px; margin-top:12px; }
-  .login-card{ padding:26px 22px; }
-  .login-card h1{ font-size:20px; }
-  .hist-item{ gap:10px; }
-  .hist-imgs img{ width:84px; }
-  .hist-meta{ font-size:12px; }
-  .progress-meta{ font-size:11px; }
-}
+  .btn-primary:hover {
+    background: var(--accentDark);
+  }
+
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+
+  .btn-small {
+    padding: 9px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    background: rgba(200,69,42,0.08);
+    border: 1px solid rgba(200,69,42,0.22);
+    white-space: nowrap;
+  }
+
+  .btn-small:hover {
+    background: rgba(200,69,42,0.14);
+  }
+
+  .icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--ink80);
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+  }
+
+  .icon-btn:hover {
+    background: rgba(255,255,255,0.8);
+    border-color: var(--ink25);
+  }
+
+  .card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--ink12);
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 10px;
+    opacity: 0.25;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  }
+
+  /* Login */
+  .login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(42,38,32,0.45);
+    backdrop-filter: blur(3px);
+  }
+
+  .login-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border: 1px solid var(--ink12);
+    border-radius: 12px;
+    padding: 42px 36px 36px;
+    box-shadow: 0 24px 60px rgba(42,38,32,0.18);
+    text-align: center;
+  }
+
+  .login-card::before {
+    content: "NO. 001";
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--sepia);
+    text-transform: uppercase;
+  }
+
+  .login-card h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .login-card .sub {
+    font-size: 13px;
+    color: var(--ink60);
+    margin-bottom: 30px;
+  }
+
+  .login-card .form-row {
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  .login-err {
+    min-height: 20px;
+    font-size: 13px;
+    color: var(--accent);
+    margin: 8px 0 16px;
+  }
+
+  .login-switch {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--ink60);
+  }
+
+  .login-switch a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  /* Header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 22px;
+    background: rgba(242,234,218,0.92);
+    border-bottom: 1px solid var(--ink12);
+    backdrop-filter: blur(6px);
+  }
+
+  .logo {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--ink60);
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+    border-radius: 999px;
+  }
+
+  #apiStatusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sepia);
+  }
+
+  #apiStatusDot.online { background: var(--accent); box-shadow: 0 0 0 3px rgba(200,69,42,0.18); }
+  #apiStatusDot.offline { background: var(--ink40); }
+
+  #userBadge {
+    font-size: 12px;
+    color: var(--ink80);
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+    border-radius: 999px;
+  }
+
+  /* Main layout */
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 26px 22px calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+
+  .result-area {
+    margin-top: 22px;
+  }
+
+  /* Upload & analysis */
+  .upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 170px;
+    padding: 26px;
+    text-align: center;
+    border: 1.5px dashed var(--ink25);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.35);
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+
+  .upload-zone:hover {
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.55);
+  }
+
+  .upload-zone .big {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .upload-zone .hint {
+    font-size: 12px;
+    color: var(--ink60);
+  }
+
+  .thumb-wrap {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 14px;
+  }
+
+  #thumbImg {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--ink12);
+    background: var(--paper2);
+  }
+
+  .thumb-meta {
+    flex: 1;
+    font-size: 12px;
+    color: var(--ink60);
+    line-height: 1.7;
+  }
+
+  .analysis-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--ink80);
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+    border-radius: var(--radius);
+  }
+
+  .analysis-loading::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--ink12);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #analysisResult {
+    margin-top: 20px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .info-grid > div {
+    padding: 12px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+    border-radius: var(--radius);
+  }
+
+  .info-grid .info-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--sepia);
+    margin-bottom: 4px;
+  }
+
+  .info-grid .info-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .accent-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 12px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+    border-radius: var(--radius);
+  }
+
+  .accent-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--ink12);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35);
+  }
+
+  .accent-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .accent-hex {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--ink60);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .position-wrap {
+    padding: 14px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+    border-radius: var(--radius);
+  }
+
+  .position-label {
+    font-size: 11px;
+    color: var(--sepia);
+    margin-bottom: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-width: 180px;
+  }
+
+  .pos-cell {
+    aspect-ratio: 1 / 1;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--ink12);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+
+  .pos-cell:hover { border-color: var(--accent); }
+  .pos-cell.active {
+    background: rgba(200,69,42,0.12);
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  /* Form groups */
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .ds-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .ds-row input { flex: 1; }
+
+  .inline-copy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    align-items: stretch;
+  }
+
+  .inline-copy input { flex: 1; min-width: 140px; }
+
+  .accent-field {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .accent-field select { flex: 1; min-width: 160px; }
+
+  .custom-hex-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+  }
+
+  .custom-hex-wrap input {
+    flex: 1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  #customHexSwatch {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+    border: 1px solid var(--ink12);
+    background: transparent;
+  }
+
+  /* Result area */
+  .result-status {
+    font-size: 13px;
+    color: var(--ink60);
+    margin-bottom: 12px;
+  }
+
+  .progress-wrap {
+    margin: 14px 0;
+  }
+
+  .progress-track {
+    position: relative;
+    height: 4px;
+    background: var(--ink08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  #progressBar {
+    width: 0%;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width .4s ease;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--ink60);
+  }
+
+  #progressPct {
+    font-weight: 600;
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .result-frame {
+    margin-top: 18px;
+    padding: 14px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--ink12);
+    border-radius: var(--radius);
+  }
+
+  #resultImg {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid var(--ink12);
+    background: var(--paper2);
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  /* Drawers */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    background: rgba(42,38,32,0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
+
+  .drawer-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 420px;
+    max-width: 100%;
+    background: var(--card);
+    border-left: 1px solid var(--ink12);
+    box-shadow: -12px 0 40px rgba(42,38,32,0.14);
+    transform: translateX(100%);
+    transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .drawer-overlay.open .drawer {
+    transform: translateX(0);
+  }
+
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--ink12);
+  }
+
+  .drawer-head h2 {
+    font-size: 20px;
+  }
+
+  .close-drawer {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: var(--ink60);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+  }
+
+  .close-drawer:hover {
+    background: rgba(255,255,255,0.5);
+    border-color: var(--ink12);
+    color: var(--ink);
+  }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px;
+    padding-bottom: calc(22px + env(safe-area-inset-bottom));
+  }
+
+  .drawer-section {
+    margin-bottom: 26px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--ink08);
+  }
+
+  .drawer-section:last-of-type {
+    border-bottom: 0;
+  }
+
+  .drawer-section h3 {
+    font-size: 14px;
+    margin-bottom: 14px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .drawer-foot {
+    padding: 18px 22px calc(18px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--ink12);
+    background: rgba(255,255,255,0.35);
+  }
+
+  .drawer-foot .hint {
+    font-size: 12px;
+    color: var(--ink60);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  #deployedNote {
+    font-size: 12px;
+    color: var(--accent);
+    line-height: 1.5;
+    margin-top: 10px;
+  }
+
+  /* History */
+  .hist-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--ink08);
+  }
+
+  .hist-imgs {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .hist-img {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--ink12);
+    background: var(--paper2);
+  }
+
+  .hist-meta {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--ink80);
+    line-height: 1.6;
+  }
+
+  .hist-meta time {
+    display: block;
+    font-size: 11px;
+    color: var(--sepia);
+    margin-bottom: 6px;
+    letter-spacing: 0.06em;
+  }
+
+  .hist-meta details {
+    margin-top: 8px;
+  }
+
+  .hist-meta summary {
+    font-size: 12px;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .hist-meta summary::-webkit-details-marker { display: none; }
+  .hist-meta summary::before {
+    content: "▸ ";
+  }
+  .hist-meta details[open] summary::before {
+    content: "▾ ";
+  }
+
+  .hist-meta details p {
+    font-size: 12px;
+    color: var(--ink60);
+    margin: 8px 0 0;
+    line-height: 1.5;
+  }
+
+  /* Mobile */
+  @media (max-width: 760px) {
+    header {
+      padding: 12px 16px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 15px;
+    }
+    .actions {
+      gap: 6px;
+    }
+    .icon-btn {
+      font-size: 12px;
+      padding: 0 10px;
+    }
+    #userBadge {
+      display: none !important;
+    }
+
+    main { padding: 16px 14px calc(20px + env(safe-area-inset-bottom)); }
+    .grid { grid-template-columns: 1fr; gap: 16px; }
+    .card { padding: 18px; border-radius: 8px; }
+    .card::after { border-radius: 8px; }
+
+    .section-title { font-size: 16px; margin-bottom: 14px; }
+
+    .upload-zone { min-height: 140px; padding: 20px; }
+    .upload-zone .big { font-size: 16px; }
+
+    .thumb-wrap { flex-direction: column; gap: 10px; }
+    #thumbImg { width: 100%; height: auto; max-height: 220px; }
+
+    .info-grid { grid-template-columns: 1fr; gap: 10px; }
+    .accent-row { flex-wrap: wrap; }
+    .accent-hex { margin-left: 0; width: 100%; }
+
+    .pos-grid { max-width: none; width: 100%; }
+    .pos-cell { min-height: 48px; }
+
+    .ds-row { flex-direction: column; }
+    .ds-row input { width: 100%; }
+    .inline-copy { flex-direction: column; }
+    .inline-copy input { width: 100%; min-width: auto; }
+    .inline-copy .btn-small { width: 100%; }
+
+    .accent-field { flex-direction: column; }
+    .accent-field select { width: 100%; }
+    .custom-hex-wrap { width: 100%; }
+
+    .result-actions { flex-direction: column; }
+    .result-actions .icon-btn { width: 100%; }
+
+    .drawer { width: 100%; }
+    .drawer-head h2 { font-size: 18px; }
+  }
+
+  /* ---- 交互补充（JS 依赖） ---- */
+  .status-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:#A6A099;
+    box-shadow:0 0 0 3px rgba(166,160,153,0.18);
+    display:inline-block;
+    transition:background .2s;
+  }
+  .status-dot.online{
+    background:var(--ok);
+    box-shadow:0 0 0 3px rgba(58,140,93,0.18);
+  }
+  .spinner{
+    width:16px; height:16px;
+    border:2px solid var(--ink12);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    flex:none;
+  }
+  .progress-bar{
+    height:100%; width:0%;
+    background:var(--accent);
+    border-radius:3px;
+    transition:width .4s ease;
+  }
+  .info-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .info-label{
+    font-size:11px; color:var(--ink40);
+    letter-spacing:0.04em; margin-bottom:2px;
+  }
+  .info-value{ font-size:15px; font-weight:500; }
+  body.drawer-open{ overflow:hidden; }
+  .inline-copy{ display:none; }
+  .inline-copy.show{ display:flex; }
+  .result-status.error{ color:var(--accent); }
+  .result-status.ok{ color:var(--ok); }
+  .btn-primary:disabled{ opacity:.65; cursor:not-allowed; }
+  .upload-zone{ cursor:pointer; }
 </style>
 </head>
 <body>
-<div class="app">
-  <header>
-    <div class="logo head-lp">ZINE 海报生成器 · 档案风</div>
-    <div class="actions">
-      <div class="status-pill">
-        <span class="status-dot" id="apiStatusDot"></span>
-        <span id="apiStatusText">检测中…</span>
-      </div>
-      <span class="status-pill" id="userBadge" style="display:none;"></span>
-      <button class="icon-btn" id="logoutBtn" style="display:none;">退出</button>
-      <button class="icon-btn" id="openHistoryBtn">生成记录</button>
-      <button class="icon-btn" id="openSettingsBtn">模型设置</button>
-    </div>
-  </header>
 
-  <main>
-    <div class="grid">
-      <section class="card">
-        <h2 class="section-title head-lp">图片与分析</h2>
-        <div class="upload-zone" id="uploadZone">
-          <div class="big">点击或拖拽照片到此处</div>
-          <div class="hint">支持 JPG / PNG，将在本地压缩到最长边 1536px 后上传</div>
-        </div>
-        <input type="file" id="fileInput" accept="image/*" style="display:none;">
-        <div class="thumb-wrap" id="thumbWrap">
-          <img id="thumbImg" alt="预览">
-          <div class="thumb-meta" id="thumbMeta"></div>
-        </div>
-
-        <div class="analysis-loading" id="analysisLoading">
-          <div class="spinner"></div>
-          <span>正在分析画面色彩与主体位置…</span>
-        </div>
-
-        <div id="analysisResult" style="display:none;">
-          <div class="info-grid">
-            <div class="info-cell"><span class="label">主色相</span><span class="value" id="resHue">—</span></div>
-            <div class="info-cell"><span class="label">饱和度</span><span class="value" id="resSat">—</span></div>
-            <div class="info-cell"><span class="label">冷暖倾向</span><span class="value" id="resTemp">—</span></div>
-            <div class="info-cell"><span class="label">配色策略</span><span class="value" id="resStrategy">—</span></div>
-          </div>
-          <div class="accent-row">
-            <div class="accent-swatch" id="accentSwatch"></div>
-            <div>
-              <div class="accent-name" id="accentName">—</div>
-              <div class="accent-hex" id="accentHex">—</div>
-            </div>
-          </div>
-          <div class="position-wrap">
-            <div class="pos-label">建议主体位置：<span id="positionLabel">—</span></div>
-            <div class="pos-grid" id="posGrid">
-              <div class="pos-cell" data-pos="top-left"></div>
-              <div class="pos-cell" data-pos="top-center"></div>
-              <div class="pos-cell" data-pos="top-right"></div>
-              <div class="pos-cell" data-pos="middle-left"></div>
-              <div class="pos-cell" data-pos="center"></div>
-              <div class="pos-cell" data-pos="middle-right"></div>
-              <div class="pos-cell" data-pos="bottom-left"></div>
-              <div class="pos-cell" data-pos="bottom-center"></div>
-              <div class="pos-cell" data-pos="bottom-right"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title head-lp">生成参数</h2>
-
-        <div class="form-group">
-          <label class="small-label">主文案</label>
-          <div class="ds-row">
-            <input type="text" id="titleInput" placeholder="一行主题文字，如「午后旧书店的猫」">
-            <button class="btn-small" id="openDsBtn">DeepSeek 生成</button>
-          </div>
-          <div class="inline-copy" id="inlineCopy">
-            <input type="text" id="dsKeywords" placeholder="输入主题关键词，如 旧书店、猫、阳光">
-            <button class="btn-small" id="doDsBtn">生成</button>
-            <button class="icon-btn" id="cancelDsBtn" style="padding:6px 10px;font-size:12px;">取消</button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="small-label">日期 / 小字（留空则自动填充）</label>
-          <input type="text" id="captionInput" placeholder="例如 2026.01.12 / NO.01">
-        </div>
-
-        <div class="form-group">
-          <label class="small-label">强调色</label>
-          <div class="accent-field">
-            <select id="accentSelect">
-              <option value="auto">自动分析</option>
-              <option value="#C8452A">朱红 #C8452A</option>
-              <option value="#2E5AAC">群青 #2E5AAC</option>
-              <option value="#A0522D">赭石 #A0522D</option>
-              <option value="#2F4F4F">墨绿 #2F4F4F</option>
-              <option value="#D4A72E">藤黄 #D4A72E</option>
-              <option value="#6B3FA0">紫棠 #6B3FA0</option>
-              <option value="#C43B6E">玫红 #C43B6E</option>
-              <option value="#3F51B5">靛青 #3F51B5</option>
-              <option value="custom">自定义</option>
-            </select>
-            <div class="custom-hex-wrap" id="customHexWrap" style="display:none;">
-              <input type="text" id="customHex" placeholder="#C8452A" maxlength="7">
-              <span class="accent-swatch" id="customHexSwatch" style="width:22px;height:22px;background:transparent;"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="small-label">主体位置</label>
-          <select id="positionSelect">
-            <option value="auto">自动分析</option>
-            <option value="top-left">左上</option>
-            <option value="top-center">上中</option>
-            <option value="top-right">右上</option>
-            <option value="middle-left">左中</option>
-            <option value="center">居中</option>
-            <option value="middle-right">右中</option>
-            <option value="bottom-left">左下</option>
-            <option value="bottom-center">下中</option>
-            <option value="bottom-right">右下</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="small-label">输出尺寸</label>
-          <select id="sizeSelect">
-            <option value="900*1500">900 × 1500</option>
-            <option value="1080*1800">1080 × 1800</option>
-            <option value="1350*2250">1350 × 2250</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="small-label">主体特征描述（可选）</label>
-          <textarea id="featuresInput" placeholder="描述主体特征、氛围、构图细节，帮助模型更准确地保留画面核心…"></textarea>
-        </div>
-
-        <button class="btn-primary" id="generateBtn">
-          <span>生成海报</span>
-        </button>
-      </section>
-    </div>
-
-    <section class="card result-area">
-      <h2 class="section-title head-lp">生成结果</h2>
-      <div class="result-status" id="resultStatus">等待上传图片与生成…</div>
-      <div class="progress-wrap" id="progressWrap" style="display:none;">
-        <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
-        <div class="progress-meta"><span id="progressPct">0%</span><span id="progressMsg">准备中…</span></div>
-      </div>
-      <div class="result-frame" id="resultFrame">
-        <img id="resultImg" alt="生成结果">
-      </div>
-      <div class="result-actions" id="resultActions" style="display:none;">
-        <button class="icon-btn" id="openFolderBtn">打开输出文件夹</button>
-      </div>
-    </section>
-  </main>
-</div>
-
-<div class="login-overlay" id="loginOverlay" style="display:none;">
+<!-- Login -->
+<div class="login-overlay" id="loginOverlay">
   <div class="login-card">
     <h1 class="head-lp">ZINE 海报生成器</h1>
-    <p class="sub">登录后开始创作</p>
-    <input type="text" id="loginUser" placeholder="用户名" autocomplete="username">
-    <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password">
+    <div class="sub">暖米纸 · 大留白 · 档案风</div>
+    <div class="form-row">
+      <label class="small-label" for="loginUser">账号</label>
+      <input type="text" id="loginUser" placeholder="用户名 / 邮箱" autocomplete="username">
+    </div>
+    <div class="form-row">
+      <label class="small-label" for="loginPass">密码</label>
+      <input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password">
+    </div>
     <div class="login-err" id="loginErr"></div>
     <button class="btn-primary" id="loginBtn">登 录</button>
-    <div class="login-switch">没有账号？<a id="toRegister">注册新账号</a></div>
+    <div class="login-switch">
+      还没有账号？<a id="toRegister">注册新账号</a>
+    </div>
   </div>
 </div>
 
-<div class="drawer-overlay" id="drawerOverlay"></div>
-<div class="drawer" id="settingsDrawer">
-  <div class="drawer-head">
-    <h2 class="head-lp">模型设置</h2>
-    <button class="close-drawer" id="closeSettingsBtn">×</button>
+<!-- Header -->
+<header>
+  <div class="logo">ZINE 海报生成器 · 档案风</div>
+  <div class="actions">
+    <span class="status-pill">
+      <span id="apiStatusDot"></span>
+      <span id="apiStatusText">服务检测中</span>
+    </span>
+    <span id="userBadge" style="display:none;"></span>
+    <button class="icon-btn" id="logoutBtn" style="display:none;">退出</button>
+    <button class="icon-btn" id="openHistoryBtn">生成记录</button>
+    <button class="icon-btn" id="openSettingsBtn">模型设置</button>
   </div>
-  <div class="drawer-body">
-    <div class="drawer-block">
-      <h3 class="head-lp">图片生成（阿里云百炼）</h3>
-      <div class="form-group">
-        <label class="small-label">API Key</label>
-        <input type="password" id="bailianKey" placeholder="输入阿里云百炼 API Key">
+</header>
+
+<!-- Main -->
+<main>
+  <div class="grid">
+    <!-- Left: Image & Analysis -->
+    <section class="card">
+      <h2 class="section-title head-lp">图片与分析</h2>
+
+      <div class="upload-zone" id="uploadZone">
+        <div class="big">点击或拖拽上传照片</div>
+        <div class="hint">支持 JPG、PNG、WebP，建议 1–8 MB</div>
       </div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+      <div class="thumb-wrap" id="thumbWrap" style="display:none;">
+        <img id="thumbImg" alt="预览">
+        <div class="thumb-meta" id="thumbMeta"></div>
+      </div>
+
+      <div class="analysis-loading" id="analysisLoading" style="display:none;">
+        正在分析画面色彩与主体位置…
+      </div>
+
+      <div id="analysisResult" style="display:none;">
+        <div class="info-grid">
+          <div>
+            <div class="info-label">主色相</div>
+            <div class="info-value" id="resHue">—</div>
+          </div>
+          <div>
+            <div class="info-label">饱和度</div>
+            <div class="info-value" id="resSat">—</div>
+          </div>
+          <div>
+            <div class="info-label">冷暖倾向</div>
+            <div class="info-value" id="resTemp">—</div>
+          </div>
+          <div>
+            <div class="info-label">配色策略</div>
+            <div class="info-value" id="resStrategy">—</div>
+          </div>
+        </div>
+
+        <div class="accent-row">
+          <div class="accent-swatch" id="accentSwatch"></div>
+          <div class="accent-name" id="accentName">自动分析</div>
+          <div class="accent-hex" id="accentHex">#C8452A</div>
+        </div>
+
+        <div class="position-wrap">
+          <div class="position-label" id="positionLabel">主体位置：自动分析</div>
+          <div class="pos-grid" id="posGrid">
+            <div class="pos-cell" data-pos="top-left"></div>
+            <div class="pos-cell" data-pos="top-center"></div>
+            <div class="pos-cell" data-pos="top-right"></div>
+            <div class="pos-cell" data-pos="middle-left"></div>
+            <div class="pos-cell" data-pos="center"></div>
+            <div class="pos-cell" data-pos="middle-right"></div>
+            <div class="pos-cell" data-pos="bottom-left"></div>
+            <div class="pos-cell" data-pos="bottom-center"></div>
+            <div class="pos-cell" data-pos="bottom-right"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Generation Params -->
+    <section class="card">
+      <h2 class="section-title head-lp">生成参数</h2>
+
       <div class="form-group">
-        <label class="small-label">模型</label>
-        <select id="imageModelSelect">
-          <option value="qwen-image-3.0">qwen-image-3.0</option>
+        <label class="small-label" for="titleInput">主文案</label>
+        <div class="ds-row">
+          <input type="text" id="titleInput" placeholder="例如：午后的阅览室">
+          <button class="btn-small" id="openDsBtn">DeepSeek 生成</button>
+        </div>
+        <div class="inline-copy" id="inlineCopy">
+          <input type="text" id="dsKeywords" placeholder="输入关键词，用空格分隔">
+          <button class="btn-small" id="doDsBtn">生成</button>
+          <button class="btn-small" id="cancelDsBtn">取消</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="small-label" for="captionInput">日期 / 小字</label>
+        <input type="text" id="captionInput" placeholder="例如：2025 · ARCHIVE NO.07">
+      </div>
+
+      <div class="form-group">
+        <label class="small-label" for="accentSelect">强调色</label>
+        <div class="accent-field">
+          <select id="accentSelect">
+            <option value="auto">自动分析</option>
+            <option value="#C8452A">朱红 #C8452A</option>
+            <option value="#2E5AAC">群青 #2E5AAC</option>
+            <option value="#A0522D">赭石 #A0522D</option>
+            <option value="#2F4F4F">墨绿 #2F4F4F</option>
+            <option value="#D4A72E">藤黄 #D4A72E</option>
+            <option value="#6B3FA0">紫棠 #6B3FA0</option>
+            <option value="#C43B6E">玫红 #C43B6E</option>
+            <option value="#3F51B5">靛青 #3F51B5</option>
+            <option value="custom">自定义</option>
+          </select>
+          <div class="custom-hex-wrap" id="customHexWrap" style="display:none;">
+            <input type="text" id="customHex" placeholder="#000000" maxlength="7">
+            <div id="customHexSwatch"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="small-label" for="positionSelect">主体位置</label>
+        <select id="positionSelect">
+          <option value="auto">自动分析</option>
+          <option value="top-left">左上</option>
+          <option value="top-center">上中</option>
+          <option value="top-right">右上</option>
+          <option value="middle-left">左中</option>
+          <option value="center">居中</option>
+          <option value="middle-right">右中</option>
+          <option value="bottom-left">左下</option>
+          <option value="bottom-center">下中</option>
+          <option value="bottom-right">右下</option>
         </select>
       </div>
-    </div>
-    <div class="drawer-block">
-      <h3 class="head-lp">文案生成（DeepSeek）</h3>
+
       <div class="form-group">
-        <label class="small-label">API Key</label>
-        <input type="password" id="dsKey" placeholder="输入 DeepSeek API Key">
-      </div>
-      <div class="form-group">
-        <label class="small-label">模型</label>
-        <select id="dsModelSelect"></select>
-      </div>
-    </div>
-    <div class="drawer-block">
-      <h3 class="head-lp">输出设置</h3>
-      <div class="form-group">
-        <label class="small-label">输出目录（本地模式）</label>
-        <input type="text" id="outputDirInput" placeholder="留空 = 默认 outputs 目录">
-      </div>
-      <div class="form-group">
-        <label class="small-label">文件命名</label>
-        <select id="namingSelect">
-          <option value="auto">按图片内容自动命名（AI 概括主题）</option>
-          <option value="file">使用原文件名</option>
+        <label class="small-label" for="sizeSelect">输出尺寸</label>
+        <select id="sizeSelect">
+          <option value="900x1500">900 × 1500</option>
+          <option value="1080x1800">1080 × 1800</option>
+          <option value="1350x2250">1350 × 2250</option>
         </select>
       </div>
-      <p class="small-label" id="deployedNote" style="display:none;color:#c62828;">线上模式：API Key 与输出目录由服务器环境变量配置，此处不可修改。</p>
-    </div>
+
+      <div class="form-group">
+        <label class="small-label" for="featuresInput">主体特征描述</label>
+        <textarea id="featuresInput" placeholder="描述照片中的人物、物体或氛围，帮助模型更准确地排版…"></textarea>
+      </div>
+
+      <button class="btn-primary" id="generateBtn">生成海报</button>
+    </section>
   </div>
-  <div class="drawer-foot">
-    <button class="btn-primary" id="saveSettingsBtn">保存配置</button>
-    <p>Key 仅保存在本机，不会上传到任何服务。留空将保留已配置的 Key。</p>
+
+  <!-- Result -->
+  <section class="card result-area">
+    <h2 class="section-title head-lp">生成结果</h2>
+    <div class="result-status" id="resultStatus">等待上传图片并配置参数</div>
+
+    <div class="progress-wrap" id="progressWrap" style="display:none;">
+      <div class="progress-track">
+        <div id="progressBar"></div>
+      </div>
+      <div class="progress-meta">
+        <span id="progressMsg">准备中</span>
+        <span id="progressPct">0%</span>
+      </div>
+    </div>
+
+    <div class="result-frame" id="resultFrame" style="display:none;">
+      <img id="resultImg" alt="生成的 ZINE 海报">
+    </div>
+
+    <div class="result-actions" id="resultActions" style="display:none;">
+      <button class="icon-btn" id="openFolderBtn">打开输出文件夹</button>
+    </div>
+  </section>
+</main>
+
+<!-- Settings Drawer -->
+<div class="drawer-overlay" id="drawerOverlay">
+  <div class="drawer" id="settingsDrawer">
+    <div class="drawer-head">
+      <h2 class="head-lp">模型设置</h2>
+      <button class="close-drawer" id="closeSettingsBtn">×</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">
+        <h3>图片生成（阿里云百炼）</h3>
+        <div class="form-group">
+          <label class="small-label" for="bailianKey">API Key</label>
+          <input type="password" id="bailianKey" placeholder="sk-...">
+        </div>
+        <div class="form-group">
+          <label class="small-label" for="imageModelSelect">模型</label>
+          <select id="imageModelSelect">
+            <option value="qwen-image-3.0" selected>qwen-image-3.0</option>
+          </select>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h3>文案生成（DeepSeek）</h3>
+        <div class="form-group">
+          <label class="small-label" for="dsKey">API Key</label>
+          <input type="password" id="dsKey" placeholder="sk-...">
+        </div>
+        <div class="form-group">
+          <label class="small-label" for="dsModelSelect">模型</label>
+          <select id="dsModelSelect">
+            <option value="deepseek-chat" selected>deepseek-chat</option>
+            <option value="deepseek-reasoner">deepseek-reasoner</option>
+          </select>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <h3>输出设置</h3>
+        <div class="form-group">
+          <label class="small-label" for="outputDirInput">输出目录</label>
+          <input type="text" id="outputDirInput" placeholder="./output">
+        </div>
+        <div class="form-group">
+          <label class="small-label" for="namingSelect">命名方式</label>
+          <select id="namingSelect">
+            <option value="content">按图片内容自动命名</option>
+            <option value="original">使用原文件名</option>
+          </select>
+        </div>
+        <div id="deployedNote" style="display:none;">
+          线上模式：API Key 与输出目录由服务器环境变量配置，此处不可修改。
+        </div>
+      </div>
+    </div>
+    <div class="drawer-foot">
+      <button class="btn-primary" id="saveSettingsBtn">保存配置</button>
+      <div class="hint">Key 仅保存在本机，不会上传到任何服务。留空将保留已配置的 Key。</div>
+    </div>
   </div>
 </div>
 
-<div class="drawer-overlay" id="historyOverlay"></div>
-<div class="drawer" id="historyDrawer">
-  <div class="drawer-head">
-    <h2 class="head-lp">生成记录</h2>
-    <button class="close-drawer" id="closeHistoryBtn">×</button>
+<!-- History Drawer -->
+<div class="drawer-overlay" id="historyOverlay">
+  <div class="drawer" id="historyDrawer">
+    <div class="drawer-head">
+      <h2 class="head-lp">生成记录</h2>
+      <button class="close-drawer" id="closeHistoryBtn">×</button>
+    </div>
+    <div class="drawer-body" id="historyBody">
+      <!-- 生成记录由 JS 动态插入 -->
+    </div>
   </div>
-  <div class="drawer-body" id="historyBody"></div>
 </div>
 
 <script>
@@ -1002,7 +1432,6 @@ function renderSettings(){
   }
   $('imageModelSelect').value = appConfig.image_model || 'qwen-image-3.0';
   const dsSel = $('dsModelSelect');
-  kimSel.innerHTML = '';
   const models = appConfig.deepseek_models && appConfig.deepseek_models.length ? appConfig.deepseek_models : DEFAULT_DS_MODELS;
   models.forEach(m => {
     const opt = document.createElement('option');
@@ -1323,7 +1752,7 @@ $('dsKeywords').addEventListener('keydown', e => { if(e.key==='Enter') generateC
 async function generateCopy(){
   const kw = $('dsKeywords').value.trim();
   if(!kw){
-    $('kimiKeywords').focus();
+    $('dsKeywords').focus();
     return;
   }
   const btn = $('doDsBtn');
