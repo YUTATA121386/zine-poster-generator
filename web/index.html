@@ -785,6 +785,55 @@
   .admin-modal-err { color: #c62828; font-size: 12px; min-height: 16px; margin-bottom: 6px; }
   .admin-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
   .admin-modal-actions .btn-primary { margin-right: auto; }
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(26,22,18,0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    cursor: zoom-out;
+  }
+  .lightbox img {
+    max-width: 92vw;
+    max-height: 88vh;
+    box-shadow: 0 22px 60px rgba(0,0,0,0.5);
+    border-radius: 6px;
+    cursor: default;
+  }
+  .lightbox-caption {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+  .lightbox-close {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    width: 42px;
+    height: 42px;
+    font-size: 26px;
+    line-height: 1;
+    color: rgba(255,255,255,0.9);
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .lightbox-close:hover { background: rgba(0,0,0,0.6); }
+  @media (max-width: 720px){
+    .lightbox { padding: 12px; }
+    .lightbox img { max-width: 98vw; max-height: 82vh; }
+  }
   @media (max-width: 720px){
     .admin-view { padding: 16px 12px 60px; }
     .admin-tab { flex: 1; padding: 9px 8px; text-align: center; }
@@ -1327,6 +1376,13 @@
       <button class="icon-btn" id="adminModalCancel">取消</button>
     </div>
   </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" style="display:none;">
+  <img id="lightboxImg" alt="预览">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+  <button class="lightbox-close" id="lightboxClose">×</button>
 </div>
 
 <!-- Settings Drawer -->
@@ -1991,8 +2047,9 @@ async function loadAdminLogs(){
   }
   d.records.forEach(r => {
     const tr = document.createElement('tr');
+    const thumbAlt = (r.theme ? r.theme + ' · ' : '') + (r.user || '');
     tr.innerHTML =
-      '<td>' + (r.url ? '<img class="admin-thumb" src="' + r.url + '?t=' + Date.now() + '" onerror="this.style.display=\'none\'" alt="">' : '') + '</td>' +
+      '<td>' + (r.url ? '<img class="admin-thumb" src="' + r.url + '?t=' + Date.now() + '" onerror="this.style.display=\'none\'" alt="' + escapeHtml(thumbAlt) + '">' : '') + '</td>' +
       '<td>' + escapeHtml(r.user || '') + '</td>' +
       '<td>' + escapeHtml(r.time || '') + '</td>' +
       '<td>' + escapeHtml(r.theme || '') + '</td>' +
@@ -2067,6 +2124,27 @@ async function submitAdminModal(){
     $('adminModalErr').textContent = err.message;
   }
 }
+
+/* ---------- Lightbox ---------- */
+const lightbox = $('lightbox');
+const lightboxImg = $('lightboxImg');
+const lightboxCaption = $('lightboxCaption');
+
+document.addEventListener('click', e => {
+  const img = e.target.closest('img.admin-thumb, img.hist-img');
+  if(!img) return;
+  lightboxImg.src = img.currentSrc || img.src;
+  lightboxCaption.textContent = img.alt || '';
+  lightbox.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+});
+function closeLightbox(){
+  lightbox.style.display = 'none';
+  document.body.style.overflow = '';
+}
+$('lightboxClose').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e => { if(e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLightbox(); });
 
 /* ---------- DeepSeek copy inline ---------- */
 $('openDsBtn').addEventListener('click', () => {
