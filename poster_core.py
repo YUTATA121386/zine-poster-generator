@@ -239,7 +239,7 @@ def _prompt_photo_panel(analysis, accent_name, accent_hex, position, verb,
 PHOTOGRAPHIC ZONE: keep the photograph itself truthful and unchanged in the upper main area; do not repaint, redraw, extend or add effects to it; only scale it to fit. Adapt the split by the source: tall or architectural photos keep photography about 55%-68% of the height, wide photos about 38%-52%, balanced photos about 48%-58%.
 
 ABSTRACT PANEL: below the photo, one perfectly uniform light ivory panel near #F3F0E8 with no gradient, texture, shadow, vignette, grain or seam. Method: DECONSTRUCT - SELECTIVE PRESERVATION - ABSTRACT - RECONSTRUCT. Identify 3-6 spatial facts from the photo (dominant masses, axes, counts, intervals, overlaps, depth, color roles, asymmetry, meaningful voids), discard surface texture and low-information detail, then rebuild only the retained relationships as one sparse abstract motif: one primary mark family (flat or softly organic color blocks, soft round masses, arcs or tapered strokes, short bars or stacked bands, simplified architectural masses) plus at most two supporting families (thin lines, small isolated dots, restrained figure ink-marks). Every mark must trace back to a real fact in the photograph; no invented decoration, no regular spacing, no symmetrical diagram, no miniature scene. Subject evidence: {feature_block}.
-The motif occupies about 30%-42% of the panel width and at most 28%-34% of its height, leaving 65%-80% clean empty space, {verb} ({position}), with generous poetic negative space.
+The motif occupies about 30%-42% of the panel width and at most 28%-34% of its height, leaving 65%-80% clean empty space, positioned by the panel's own balance and the photograph's dominant gesture, with generous poetic negative space.
 
 COLOR SYSTEM: extract colors only from the photograph: one main color role ({accent_name} {accent_hex} as the primary accent), one dark structural role, one light neutral role, and at most one or two small accents; no neon, no invented complementary colors, no rainbow palette.
 
@@ -260,7 +260,7 @@ def _prompt_travel_abstract(analysis, accent_name, accent_hex, position, verb,
 UPPER PHOTOGRAPH: preserve the photograph's content, exposure, color and detail exactly; do not restyle, repaint, filter, recrop or regenerate it.
 
 LOWER PANEL: one perfectly uniform flat field at or near #F3F0E8; no gradient, light falloff, glow, shadow, edge darkening, band, seam, grain, noise, paper texture, fibers, haze, vignette, stains or color cast. DECONSTRUCT the photo into dominant masses, axes, boundaries, counts, directions, overlaps, intervals, depth, color roles, asymmetry and meaningful voids; remove photographic surface, literal object outlines, perspective detail and minor objects; RECONSTRUCT only the retained relationships as minimal marks using this mapping: mass or field -> one clean flat block or quiet plane; compact object -> dot, circle, pill, short line or tiny silhouette; horizon or boundary -> one thin line; direction or motion -> taper, streak, aligned bars or directional sequence; repeated objects -> repeated modules preserving source spacing and scale hierarchy; radial structure -> partial arc plus selected spokes and nodes; enclosure or overlap -> nested or overlapping shapes without completing hidden content; reflection or shadow -> shortened, lighter echo aligned to its source. Subject evidence: {feature_block}. Use one primary mark family and at most two supporting families; preserve source asymmetry and irregular spacing; allow measured displacement, compression, separation, overlap and scale change only when they clarify the source relationships; never rearrange arbitrarily.
-The complete motif occupies about 30%-42% of the panel width, at most 28% of its height, leaving 75%-88% visually empty, {verb} ({position}); scale it down as one coherent group without altering internal relationships.
+The complete motif occupies about 30%-42% of the panel width, at most 28% of its height, leaving 75%-88% visually empty, positioned by the panel's own balance and the photograph's dominant gesture; scale it down as one coherent group without altering internal relationships.
 
 COLOR: extract 3-5 color roles from the photograph preserving their saturation and luminance hierarchy; slightly prefer assigning different sampled color roles to different meaningful marks; use {accent_name} ({accent_hex}) as the main accent role with 2-3 restrained accents at most; no invented neon, rainbow palettes, glossy gradients or global muting.
 
@@ -354,7 +354,11 @@ def generate(path, title=None, caption=None, features=None,
         raise RuntimeError("未找到 API Key：请在工具里粘贴保存，或配置 POSTER_API_KEY 环境变量")
 
     analysis = analyze_image(path)
-    say(f"分析完成：强调色 {analysis['accent_name']} / 位置 {analysis['position_label']}")
+    style = style or "zine"
+    if style == "zine":
+        say(f"分析完成：强调色 {analysis['accent_name']} / 建议位置 {analysis['position_label']}")
+    else:
+        say(f"分析完成：强调色 {analysis['accent_name']} / 构图由「{STYLES[style]}」风格决定")
 
     prompt = build_prompt(analysis, title, caption, features, accent_override,
                          position_override, style=style)

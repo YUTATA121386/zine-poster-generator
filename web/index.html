@@ -1336,7 +1336,7 @@
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
-            <tr><th>成品</th><th>账号</th><th>时间</th><th>主题</th><th>主文案</th><th>强调色</th><th>位置</th><th>操作</th></tr>
+            <tr><th>成品</th><th>账号</th><th>时间</th><th>主题</th><th>风格</th><th>主文案</th><th>强调色</th><th>位置</th><th>操作</th></tr>
           </thead>
           <tbody id="adminLogsBody"></tbody>
         </table>
@@ -1811,9 +1811,18 @@ function renderAnalysis(data){
   $('accentName').textContent = data.accent_name || '—';
   $('accentHex').textContent = data.accent_hex || '—';
   $('accentSwatch').style.backgroundColor = data.accent_hex || 'transparent';
-  $('positionLabel').textContent = data.position_label || positionLabelFromValue(data.position) || '—';
-  highlightPosition(data.position);
+  const styleNow = ($('styleSelect') && $('styleSelect').value) || 'zine';
+  if(styleNow === 'zine'){
+    $('positionLabel').textContent = data.position_label || positionLabelFromValue(data.position) || '—';
+    highlightPosition(data.position);
+  }else{
+    $('positionLabel').textContent = '随风格构图';
+    highlightPosition(null);
+  }
 }
+
+const STYLE_LABELS = {zine:'档案风','photo-panel':'摄影抽象面板','travel-abstract':'旅行抽象研究','paper-collage':'拾景纸拼贴',distillation:'影像蒸馏'};
+function styleLabel(v){ return STYLE_LABELS[v] || '档案风'; }
 
 function positionLabelFromValue(v){
   const map={
@@ -1938,6 +1947,7 @@ function renderHistory(records, bodyEl){
     const meta = [
       r.user ? '<b>' + r.user + '</b>' : '',
       r.time || '',
+      '风格: ' + styleLabel(r.style || 'zine'),
       r.ip ? 'IP: ' + r.ip : '',
       r.theme ? '主题: ' + r.theme : '',
       r.title ? '文案: ' + r.title : '',
@@ -2037,7 +2047,7 @@ async function loadAdminLogs(){
   const tbody = $('adminLogsBody');
   tbody.innerHTML = '';
   if(!d.records.length){
-    tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">暂无记录</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="admin-empty">暂无记录</td></tr>';
     return;
   }
   d.records.forEach(r => {
@@ -2048,6 +2058,7 @@ async function loadAdminLogs(){
       '<td>' + escapeHtml(r.user || '') + '</td>' +
       '<td>' + escapeHtml(r.time || '') + '</td>' +
       '<td>' + escapeHtml(r.theme || '') + '</td>' +
+      '<td>' + escapeHtml(styleLabel(r.style || 'zine')) + '</td>' +
       '<td>' + escapeHtml(r.title || '') + '</td>' +
       '<td>' + escapeHtml(r.accent || '') + '</td>' +
       '<td>' + escapeHtml(positionLabelFromValue(r.position)) + '</td>' +
