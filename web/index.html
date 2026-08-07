@@ -448,6 +448,49 @@ textarea{
   font-size:12px; color:var(--ink-40); margin:10px 0 0;
 }
 body.drawer-open{ overflow:hidden; }
+
+/* ---------- 登录 ---------- */
+.login-overlay{
+  position:fixed; inset:0; z-index:200;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+}
+.login-card{
+  background:#fffdf7;
+  border:1px solid rgba(42,38,32,.15);
+  border-radius:14px;
+  padding:36px 40px;
+  width:360px; max-width:92vw;
+  box-shadow:0 12px 34px rgba(42,38,32,.10);
+}
+.login-card h1{ margin:0 0 6px; font-size:22px; }
+.login-card .sub{ font-size:13px; color:#8a8378; margin:0 0 22px; }
+.login-card input{
+  display:block; width:100%; box-sizing:border-box;
+  margin-bottom:12px; padding:11px 12px;
+  border:1px solid rgba(42,38,32,.18); border-radius:8px;
+  font-size:15px; background:#fffdf7; font-family:inherit;
+}
+.login-err{ color:#c62828; font-size:13px; min-height:20px; margin-bottom:6px; }
+.login-card .btn-primary{ width:100%; padding:12px; font-size:15px; border-radius:8px; }
+.login-switch{ text-align:center; margin-top:14px; font-size:13px; color:#6f675c; }
+.login-switch a{ color:var(--accent); cursor:pointer; text-decoration:underline; }
+
+/* ---------- 移动端 ---------- */
+@media (max-width: 760px){
+  header{ padding:12px 14px; flex-wrap:wrap; gap:8px; }
+  .actions{ width:100%; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+  .logo{ font-size:15px; }
+  main{ padding:12px; }
+  .grid{ grid-template-columns:1fr !important; gap:14px; }
+  .card{ padding:14px; }
+  .drawer{ width:100%; }
+  .drawer-body{ padding:16px; }
+  .btn-primary, .btn-small, .icon-btn{ min-height:44px; font-size:15px; padding:10px 14px; }
+  .upload-zone{ min-height:150px; padding:24px 16px; }
+  input, select, textarea{ font-size:16px !important; }
+  .status-pill{ font-size:12px; }
+}
 </style>
 </head>
 <body>
@@ -459,6 +502,8 @@ body.drawer-open{ overflow:hidden; }
         <span class="status-dot" id="apiStatusDot"></span>
         <span id="apiStatusText">检测中…</span>
       </div>
+      <span class="status-pill" id="userBadge" style="display:none;"></span>
+      <button class="icon-btn" id="logoutBtn" style="display:none;">退出</button>
       <button class="icon-btn" id="openHistoryBtn">生成记录</button>
       <button class="icon-btn" id="openSettingsBtn">模型设置</button>
     </div>
@@ -607,6 +652,19 @@ body.drawer-open{ overflow:hidden; }
   <div style="text-align:center;font-size:12px;color:#9a938a;padding:8px 0 16px;">使用本站即表示同意：生成内容与参数会被服务器记录，仅用于站主管理与统计。</div>
 </div>
 
+<div class="login-overlay" id="loginOverlay" style="display:none;">
+  <div class="login-card">
+    <h1 class="head-lp">ZINE 海报生成器</h1>
+    <p class="sub">登录后使用 · 生成内容与图片会被记录，仅本人与管理员可见</p>
+    <input type="text" id="loginUser" placeholder="用户名" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password">
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn-primary" id="loginBtn">登 录</button>
+    <div class="login-switch">没有账号？<a id="toRegister">注册新账号</a></div>
+    <div class="login-switch" style="margin-top:8px;color:#9a938a;">第一个注册的账号为管理员</div>
+  </div>
+</div>
+
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <div class="drawer" id="settingsDrawer">
   <div class="drawer-head">
@@ -664,15 +722,15 @@ body.drawer-open{ overflow:hidden; }
   </div>
 </div>
 
-<div class="drawer-overlay" id="historyOverlay" style="display:none;"></div>
-<div class="drawer" id="historyDrawer" style="display:none;">
+<div class="drawer-overlay" id="historyOverlay"></div>
+<div class="drawer" id="historyDrawer">
   <div class="drawer-head">
     <h2 class="head-lp">生成记录</h2>
     <button class="close-drawer" id="closeHistoryBtn">×</button>
   </div>
   <div class="drawer-body" id="historyBody"></div>
   <div class="drawer-foot">
-    <p>记录保存在服务器 history.jsonl，仅站主可见。</p>
+    <p>记录仅本人与管理员可见；原图与提示词仅管理员可看全部。</p>
   </div>
 </div>
 
@@ -722,10 +780,14 @@ const customHexWrap = $('customHexWrap');
 
 /* ---------- Helpers ---------- */
 async function fetchApi(path, opts={}){
-  const res = await fetch(path, {
-    headers:{'Content-Type':'application/json'},
-    ...opts
-  });
+  const headers = {'Content-Type':'application/json'};
+  const token = localStorage.getItem('pg_token');
+  if(token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(path, {headers, ...opts});
+  if(res.status === 401){
+    localStorage.removeItem('pg_token');
+    showLogin();
+  }
   let data;
   try{ data = await res.json(); }
   catch(e){ data = {}; }
@@ -974,6 +1036,67 @@ function highlightPosition(pos){
   if(el) el.classList.add('active');
 }
 
+/* ---------- Auth ---------- */
+let appUser = null;
+let loginMode = 'login';
+
+function showLogin(){
+  $('loginOverlay').style.display = 'flex';
+}
+function onAuthed(){
+  $('loginOverlay').style.display = 'none';
+  $('userBadge').style.display = '';
+  $('logoutBtn').style.display = '';
+  $('userBadge').textContent = (appUser.is_admin ? '★ ' : '') + appUser.username + (appUser.is_admin ? '（管理员）' : '');
+  loadConfig();
+}
+function setLoginMode(mode){
+  loginMode = mode;
+  $('loginBtn').textContent = mode === 'login' ? '登 录' : '注册并登录';
+  $('toRegister').textContent = mode === 'login' ? '注册新账号' : '已有账号，去登录';
+  $('loginErr').textContent = '';
+}
+async function submitAuth(){
+  const u = $('loginUser').value.trim();
+  const p = $('loginPass').value;
+  if(!u || !p){ $('loginErr').textContent = '请输入用户名和密码'; return; }
+  $('loginBtn').disabled = true;
+  try{
+    const res = await fetch('/api/' + loginMode, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u, password:p})
+    });
+    const d = await res.json();
+    if(!res.ok || d.error){ $('loginErr').textContent = d.error || '操作失败'; return; }
+    localStorage.setItem('pg_token', d.token);
+    appUser = {username: d.username, is_admin: d.is_admin};
+    onAuthed();
+    showStatus(loginMode === 'register' ? '注册成功，欢迎！' : '登录成功', 'ok');
+  }catch(e){
+    $('loginErr').textContent = '网络错误：' + e.message;
+  }finally{
+    $('loginBtn').disabled = false;
+  }
+}
+async function initAuth(){
+  const token = localStorage.getItem('pg_token');
+  if(token){
+    try{
+      const me = await fetchApi('/api/me', {method:'POST', body:'{}'});
+      appUser = me;
+      onAuthed();
+      return;
+    }catch(e){ /* token 失效则走登录 */ }
+  }
+  localStorage.removeItem('pg_token');
+  showLogin();
+}
+$('loginBtn').addEventListener('click', submitAuth);
+$('toRegister').addEventListener('click', () => setLoginMode(loginMode === 'login' ? 'register' : 'login'));
+['loginUser','loginPass'].forEach(id => $(id).addEventListener('keydown', e => { if(e.key === 'Enter') submitAuth(); }));
+$('logoutBtn').addEventListener('click', () => { localStorage.removeItem('pg_token'); location.reload(); });
+
 /* ---------- History ---------- */
 const historyOverlay = $('historyOverlay');
 const historyDrawer = $('historyDrawer');
@@ -984,14 +1107,14 @@ $('closeHistoryBtn').addEventListener('click', closeHistory);
 historyOverlay.addEventListener('click', closeHistory);
 
 function openHistory(){
-  historyOverlay.style.display = 'block';
-  historyDrawer.style.display = 'block';
+  historyOverlay.classList.add('open');
+  historyDrawer.classList.add('open');
   document.body.classList.add('drawer-open');
   loadHistory();
 }
 function closeHistory(){
-  historyOverlay.style.display = 'none';
-  historyDrawer.style.display = 'none';
+  historyOverlay.classList.remove('open');
+  historyDrawer.classList.remove('open');
   document.body.classList.remove('drawer-open');
 }
 
@@ -1036,10 +1159,11 @@ function renderHistory(records, bodyEl){
     return;
   }
   bodyEl.innerHTML = '';
-  records.forEach(r => {
+  records.forEach((r, idx) => {
     const item = document.createElement('div');
-    item.style.cssText = 'display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(42,38,32,.08);';
-    const info = [
+    item.style.cssText = 'display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(42,38,32,.08);';
+    const meta = [
+      r.user ? '<b>' + r.user + '</b>' : '',
       r.time || '',
       r.ip ? 'IP: ' + r.ip : '',
       r.theme ? '主题: ' + r.theme : '',
@@ -1047,12 +1171,36 @@ function renderHistory(records, bodyEl){
       r.accent ? '强调色: ' + r.accent : '',
       r.position ? '位置: ' + r.position : '',
       r.size || ''
-    ].filter(Boolean).join(' · ');
-    item.innerHTML = (r.url
-      ? '<img src="' + r.url + '?t=' + Date.now() + '" style="width:110px;height:auto;border:1px solid rgba(42,38,32,.15);border-radius:6px;flex:none;" onerror="this.style.display='none'">'
-      : '') +
-      '<div style="font-size:13px;line-height:1.7;color:#3a352c;">' + info + '</div>';
+    ].filter(Boolean).join('<br>');
+    const imgs = [];
+    if(r.input_url){
+      imgs.push('<div style="text-align:center;"><div style="font-size:11px;color:#9a938a;margin-bottom:2px;">原图</div>' +
+        '<img id="inimg' + idx + '" style="width:110px;height:auto;border:1px solid rgba(42,38,32,.15);border-radius:6px;" alt="原图"></div>');
+    }
+    if(r.url){
+      imgs.push('<div style="text-align:center;"><div style="font-size:11px;color:#9a938a;margin-bottom:2px;">成品</div>' +
+        '<img src="' + r.url + '?t=' + Date.now() + '" style="width:110px;height:auto;border:1px solid rgba(42,38,32,.15);border-radius:6px;" onerror="this.style.display=\'none\'"></div>');
+    }
+    const promptBlock = r.prompt
+      ? '<details style="margin-top:8px;"><summary style="cursor:pointer;font-size:12px;color:#6f675c;">查看提示词</summary>' +
+        '<pre style="white-space:pre-wrap;font-size:11px;background:#f6f1e6;border-radius:6px;padding:8px;margin:6px 0 0;max-height:180px;overflow:auto;color:#4a443b;">' +
+        r.prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre></details>'
+      : '';
+    item.innerHTML = (imgs.length ? '<div style="display:flex;gap:10px;flex:none;">' + imgs.join('') + '</div>' : '') +
+      '<div style="font-size:13px;line-height:1.7;color:#3a352c;min-width:0;">' + meta + promptBlock + '</div>';
     bodyEl.appendChild(item);
+    if(r.input_url){
+      const name = r.input_url.split('/').pop();
+      fetch('/api/file?name=' + encodeURIComponent(name),
+        {headers:{'Authorization':'Bearer ' + (localStorage.getItem('pg_token') || '')}})
+        .then(res => res.ok ? res.blob() : null)
+        .then(blob => {
+          const el = document.getElementById('inimg' + idx);
+          if(blob && el){ el.src = URL.createObjectURL(blob); }
+          else if(el){ el.style.display = 'none'; }
+        })
+        .catch(() => { const el = document.getElementById('inimg' + idx); if(el) el.style.display = 'none'; });
+    }
   });
 }
 
@@ -1165,7 +1313,7 @@ async function generatePoster(){
   setGenerateState(true);
   resultFrame.style.display = 'none';
   resultActions.style.display = 'none';
-  showStatus('正在调用 qwen-image-3.0 生成海报，请稍候（约 1 分钟）…', 'info');
+  showStatus('正在调用 qwen-image-3.0 生成海报，约 1 分钟…手机请保持屏幕亮起', 'info');
 
   try{
     const data = await fetchApi('/api/generate', {method:'POST', body:JSON.stringify(body)});
@@ -1196,7 +1344,7 @@ openFolderBtn.addEventListener('click', async () => {
 });
 
 /* ---------- Init ---------- */
-document.addEventListener('DOMContentLoaded', loadConfig);
+document.addEventListener('DOMContentLoaded', initAuth);
 </script>
 </body>
 </html>

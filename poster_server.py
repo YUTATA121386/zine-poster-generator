@@ -6,8 +6,11 @@
 """
 import base64
 import hashlib
+import hmac
 import io
 import json
+import secrets
+import shutil
 import os
 import re
 import sys
@@ -17,7 +20,7 @@ import urllib.error
 import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse, unquote, parse_qs
 
 import poster_core
 
@@ -27,6 +30,9 @@ OUT_DIR = os.path.join(BASE_DIR, "outputs")
 TMP_DIR = os.path.join(BASE_DIR, "tmp")
 CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
 HISTORY_FILE = os.path.join(BASE_DIR, "history.jsonl")
+USERS_FILE = os.path.join(BASE_DIR, "users.json")
+UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
+SESSIONS = {}  # token -> {"username": str, "expires": float}
 
 DEFAULT_CONFIG = {
     "bailian_key": "",
@@ -111,6 +117,53 @@ def load_history(limit=200):
     except (OSError, ValueError):
         return []
     return list(reversed(recs[-limit:]))
+
+
+# ---------- 用户系统 ----------
+
+def load_users():
+    try:
+        with open(USERS_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_users(users):
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
+
+
+def hash_password(password, salt=None):
+    if salt is None:
+        salt = secrets.token_hex(16)
+    h = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"),
+                            salt.encode("utf-8"), 120000).hex()
+    return salt + "$" + h
+
+
+def verify_password(password, stored):
+    try:
+        salt, h = stored.rsplit("$", 1)
+    except ValueError:
+        return False
+    calc = hash_password(password, salt).split("$", 1)[1]
+    return hmac.compare_digest(calc, h)
+
+
+def new_session(username):
+    tok = secrets.token_hex(32)
+    SESSIONS[tok] = {"username": username, "expires": time.time() + 7 * 86400}
+    return tok
+
+
+def session_user(self):
+    hdr = self.headers.get("Authorization") or ""
+    if hdr.startswith("Bearer "):
+        sess = SESSIONS.get(hdr[7:].strip())
+        if sess and sess["expires"] > time.time():
+            return sess["username"]
+    return None
 
 
 def out_dir_of(cfg):
@@ -258,6 +311,26 @@ class Handler(BaseHTTPRequestHandler):
                 "admin_required": bool(admin_token_of(cfg)),
                 "size": cfg["size"],
             })
+        elif path.startswith("/api/file"):
+            username = session_user(self)
+            if not username:
+                self._json({"error": "请先登录"}, 401)
+                return
+            qs = parse_qs(urlparse(self.path).query)
+            name = os.path.basename(qs.get("name", [""])[0])
+            fp = os.path.join(UPLOADS_DIR, name)
+            if not os.path.isfile(fp):
+                self._json({"error": "文件不存在"}, 404)
+                return
+            users = load_users()
+            is_admin = bool(users.get(username, {}).get("admin"))
+            allowed = is_admin or any(
+                r.get("user") == username and r.get("input_url", "").endswith("/" + name)
+                for r in load_history())
+            if not allowed:
+                self._json({"error": "无权访问"}, 403)
+                return
+            self._serve_file(fp, "image/jpeg")
         elif path.startswith("/outputs/"):
             name = os.path.basename(unquote(urlparse(self.path).path))
             ctype = "image/png" if name.lower().endswith(".png") else "application/octet-stream"
@@ -280,7 +353,13 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             if path == "/api/config":
-                self._post_config(raw)
+                self._post_config(raw)  # 公开（仅掩码状态）
+            elif path == "/api/register":
+                self._post_register(raw)
+            elif path == "/api/login":
+                self._post_login(raw)
+            elif path == "/api/me":
+                self._post_me(raw)
             elif path == "/api/history":
                 self._post_history(raw)
             elif path == "/api/analyze":
@@ -290,8 +369,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/generate":
                 self._post_generate(raw)
             elif path == "/api/open-output-folder":
-                os.startfile(out_dir_of(load_config()))
-                self._json({"ok": True})
+                self._post_open_folder(raw)
             else:
                 self._json({"error": "not found"}, 404)
         except Exception as e:
@@ -324,16 +402,73 @@ class Handler(BaseHTTPRequestHandler):
         save_config(cfg)  # 非密钥字段（模型/命名/尺寸）始终持久化
         self._json({"ok": True, "deployed": deployed})
 
-    def _post_history(self, raw):
+    def _require_user(self):
+        username = session_user(self)
+        if not username:
+            self._json({"error": "请先登录"}, 401)
+            return None
+        return username
+
+    def _post_register(self, raw):
         data = self._load_json(raw)
-        cfg = load_config()
-        tok = admin_token_of(cfg)
-        if tok and str(data.get("token") or "") != tok:
-            self._json({"error": "管理密码错误"}, 403)
+        username = str(data.get("username") or "").strip()
+        password = str(data.get("password") or "")
+        if not re.match(r"^[\w\u4e00-\u9fa5-]{2,20}$", username):
+            self._json({"error": "用户名需 2-20 位（中文/字母/数字/下划线/连字符）"}, 400)
             return
-        self._json({"records": load_history()})
+        if len(password) < 6:
+            self._json({"error": "密码至少 6 位"}, 400)
+            return
+        users = load_users()
+        if username in users:
+            self._json({"error": "用户名已存在"}, 400)
+            return
+        is_admin = len(users) == 0  # 第一个注册用户自动成为管理员
+        users[username] = {"pwd": hash_password(password), "admin": is_admin,
+                           "created": time.strftime("%Y-%m-%d %H:%M:%S")}
+        save_users(users)
+        self._json({"ok": True, "token": new_session(username),
+                    "username": username, "is_admin": is_admin})
+
+    def _post_login(self, raw):
+        data = self._load_json(raw)
+        username = str(data.get("username") or "").strip()
+        password = str(data.get("password") or "")
+        users = load_users()
+        stored = users.get(username)
+        if not stored or not verify_password(password, stored.get("pwd", "")):
+            self._json({"error": "用户名或密码错误"}, 401)
+            return
+        self._json({"ok": True, "token": new_session(username),
+                    "username": username, "is_admin": bool(stored.get("admin"))})
+
+    def _post_me(self, raw):
+        username = self._require_user()
+        if not username:
+            return
+        users = load_users()
+        self._json({"username": username, "is_admin": bool(users.get(username, {}).get("admin"))})
+
+    def _post_history(self, raw):
+        username = self._require_user()
+        if not username:
+            return
+        users = load_users()
+        is_admin = bool(users.get(username, {}).get("admin"))
+        recs = load_history()
+        if not is_admin:
+            recs = [r for r in recs if r.get("user") == username]
+        self._json({"records": recs, "is_admin": is_admin})
+
+    def _post_open_folder(self, raw):
+        if not self._require_user():
+            return
+        os.startfile(out_dir_of(load_config()))
+        self._json({"ok": True})
 
     def _post_analyze(self, raw):
+        if not self._require_user():
+            return
         data = self._load_json(raw)
         try:
             tmp = save_temp_image(data.get("image"))
@@ -353,6 +488,8 @@ class Handler(BaseHTTPRequestHandler):
         self._json(a)
 
     def _post_copy(self, raw):
+        if not self._require_user():
+            return
         data = self._load_json(raw)
         kw = (data.get("keywords") or "").strip()
         if not kw:
@@ -372,6 +509,9 @@ class Handler(BaseHTTPRequestHandler):
         self._json({"line": line})
 
     def _post_generate(self, raw):
+        username = self._require_user()
+        if not username:
+            return
         data = self._load_json(raw)
         cfg = load_config()
         if not cfg.get("bailian_key"):
@@ -398,7 +538,17 @@ class Handler(BaseHTTPRequestHandler):
             name = (data.get("name") or "")
             name_base = os.path.splitext(os.path.basename(name))[0] if name else None
             out_dir = out_dir_of(cfg)
-            out, _, info = poster_core.generate(
+            input_url = ""
+            try:
+                os.makedirs(UPLOADS_DIR, exist_ok=True)
+                iname = "in_" + os.path.basename(tmp)
+                ipath = os.path.join(UPLOADS_DIR, iname)
+                if not os.path.exists(ipath):
+                    shutil.copyfile(tmp, ipath)
+                input_url = "/uploads/" + iname
+            except OSError:
+                pass
+            out, _, info, prompt = poster_core.generate(
                 tmp, title=title, caption=caption, features=features,
                 accent_override=accent, position_override=pos_core,
                 size=size, out_dir=out_dir, key=cfg["bailian_key"],
@@ -420,6 +570,7 @@ class Handler(BaseHTTPRequestHandler):
                     out = new_path
             append_history({
                 "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "user": username,
                 "ip": self.client_address[0],
                 "file": name_base or "",
                 "theme": theme,
@@ -427,6 +578,8 @@ class Handler(BaseHTTPRequestHandler):
                 "accent": accent[0] if accent else "",
                 "position": pos_fe or "",
                 "size": size,
+                "input_url": input_url,
+                "prompt": prompt,
                 "url": "/outputs/" + os.path.basename(out),
             })
             self._json({"url": "/outputs/" + os.path.basename(out), "info": info})

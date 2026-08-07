@@ -292,7 +292,7 @@ def generate(path, title=None, caption=None, features=None,
     check = Image.open(out_path)
     info = {"format": check.format, "mode": check.mode, "size": check.size}
     say(f"已保存并校验：{os.path.basename(out_path)}")
-    return out_path, analysis, info
+    return out_path, analysis, info, prompt
 
 
 def main(argv=None):
@@ -342,9 +342,9 @@ def main(argv=None):
     key = load_api_key()
     if not key:
         raise SystemExit("未找到 API Key")
-    out, _, info = generate(args.input, args.title, args.caption, features,
-                            accent_override, args.position, args.size,
-                            args.out_dir, key, progress=print)
+    out, _, info, _ = generate(args.input, args.title, args.caption, features,
+                              accent_override, args.position, args.size,
+                              args.out_dir, key, progress=print)
     print(f"已保存: {out}  {info['format']}/{info['mode']} {info['size'][0]}x{info['size'][1]}")
     return 0
 
