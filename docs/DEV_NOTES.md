@@ -23,6 +23,8 @@
 - 图片分析出的「建议主体位置」只注入档案风（zine）的 prompt；摄影抽象面板、旅行抽象研究改为按自身构图平衡放置 motif（paper-collage/distillation 本就不使用位置）；非档案风生成进度提示改为「构图由风格决定」，前端分析结果区显示「随风格构图」且不高亮九宫格
 - 生成记录（个人抽屉）与管理台日志新增「风格」列，旧记录无 style 字段按「档案风」显示
 - 历史记录里 position 存的是 core 值（upper-*/center-*/lower-*），前端 positionLabelFromValue 已做归一化，管理台与生成记录位置列均显示中文
+### 7. 上传后可重新选择图片（已上线）
+- 缩略图区新增「重新选择」按钮：清空当前图片/分析结果并恢复上传区，fileInput.value 置空以便重选同一文件也能触发 change
 ### 1. 手机端容易登出（已修复上线）
 - 根因：登录态只存内存（`SESSIONS = {}`），服务一重启全部失效；有效期仅 7 天
 - 修复：`load_sessions`/`save_sessions` 落盘 `DATA_DIR/sessions.json`，有效期 30 天
