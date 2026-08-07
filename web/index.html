@@ -1084,7 +1084,6 @@ $('logoutBtn').addEventListener('click', () => { localStorage.removeItem('pg_tok
 /* ---------- History ---------- */
 const historyOverlay = $('historyOverlay');
 const historyDrawer = $('historyDrawer');
-let historyToken = null;
 
 $('openHistoryBtn').addEventListener('click', openHistory);
 $('closeHistoryBtn').addEventListener('click', closeHistory);
@@ -1105,33 +1104,9 @@ function closeHistory(){
 async function loadHistory(){
   const bodyEl = $('historyBody');
   bodyEl.innerHTML = '<p style="color:#888;">加载中…</p>';
-  const tryLoad = async (token) => {
-    const res = await fetch('/api/history', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({token: token || null})
-    });
-    const data = await res.json();
-    if(!res.ok || data.error){
-      throw new Error(data.error || '加载失败');
-    }
-    return data.records || [];
-  };
   try{
-    let records;
-    try{
-      records = await tryLoad(historyToken);
-    }catch(err){
-      if(err.message.indexOf('管理密码') >= 0 || err.message.indexOf('403') >= 0){
-        const pass = prompt('请输入管理密码：');
-        if(pass === null){ bodyEl.innerHTML = '<p style="color:#888;">已取消</p>'; return; }
-        historyToken = pass;
-        records = await tryLoad(pass);
-      } else {
-        throw err;
-      }
-    }
-    renderHistory(records, bodyEl);
+    const data = await fetchApi('/api/history', {method:'POST', body:'{}'});
+    renderHistory(data.records || [], bodyEl);
   }catch(err){
     bodyEl.innerHTML = '<p style="color:#c62828;">加载失败：' + err.message + '</p>';
   }
