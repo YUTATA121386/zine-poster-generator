@@ -1,0 +1,9 @@
+﻿# 本机敏感配置（绝不提交）
+config.json
+.env
+
+# 运行产物
+outputs/
+tmp/
+__pycache__/
+*.pyc
