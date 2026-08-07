@@ -204,12 +204,21 @@ Flat orthographic scanned-paper view, quiet memory-like archival diary feeling. 
 
 def _friendly_error(code, body, reason):
     body = (body or "").strip().replace("\n", " ")
+    low = body.lower()
+    if "arrearage" in low or "insufficient balance" in low or "欠费" in body:
+        return ("接口提示账号欠费或余额不足，请先到阿里云百炼控制台充值，"
+                "并确认已开通 qwen-image-3.0 付费后重试。")
     if code == 403:
         if "AllocationQuota.FreeTierOnly" in body:
             return ("403：账号当前处于「仅免费额度」模式或免费额度已用完。"
                     "请到阿里云百炼控制台检查「仅免费额度」开关或开通付费后重试。")
         return "403：接口拒绝访问（配额或权限问题）。" + (body[:160] if body else "")
-    if code == 400 and "model not exist" in body.lower():
+    if code == 401:
+        return "401：API Key 无效或无权限，请检查密钥与模型开通状态。"
+    if code == 429:
+        return ("429：触发限流或调用额度不足，请稍后再试；"
+                "若持续出现，请检查阿里云百炼账户余额与配额。")
+    if code == 400 and "model not exist" in low:
         return "400：模型不存在，请检查 MODEL 配置（应为 qwen-image-3.0）。"
     return f"接口错误 {code}：{reason}。" + (body[:160] if body else "")
 
@@ -272,7 +281,8 @@ def generate(path, title=None, caption=None, features=None,
         except urllib.error.URLError as e:
             raise RuntimeError(f"网络错误：{e.reason}")
     if result is None:
-        raise RuntimeError("多次重试仍限流，请稍后再试")
+        raise RuntimeError("多次重试仍触发限流，请稍后再试；"
+                             "若持续出现，请检查阿里云百炼账户余额与配额")
 
     try:
         img_url = result["output"]["choices"][0]["message"]["content"][0]["image"]

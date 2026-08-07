@@ -34,6 +34,8 @@ HISTORY_FILE = os.path.join(DATA_DIR, "history.jsonl")
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 UPLOADS_DIR = os.path.join(DATA_DIR, "uploads")
 SESSIONS = {}  # token -> {"username": str, "expires": float}
+TASKS = {}  # task_id -> {state, progress, message, url, info, error, ip}
+_TASK_LOCK = threading.Lock()
 
 DEFAULT_CONFIG = {
     "bailian_key": "",
@@ -118,6 +120,114 @@ def load_history(limit=200):
     except (OSError, ValueError):
         return []
     return list(reversed(recs[-limit:]))
+
+
+# ---------- 异步生成任务 ----------
+
+def _task_progress(task, p, msg):
+    with _TASK_LOCK:
+        task["progress"] = max(int(p), task.get("progress") or 0)
+        task["message"] = msg
+        task["state"] = "running"
+
+
+def _task_say(task, msg):
+    p = task.get("progress") or 0
+    if "分析完成" in msg:
+        p = max(p, 30)
+    elif "正在调用" in msg:
+        p = max(p, 45)
+    elif "限流" in msg:
+        p = max(p, 45)
+    elif "下载结果" in msg:
+        p = max(p, 75)
+    elif "已保存并校验" in msg:
+        p = max(p, 88)
+    _task_progress(task, p, msg)
+
+
+def _run_generate_task(task_id, username, data, cfg, tmp):
+    task = TASKS.get(task_id)
+    if task is None:
+        safe_unlink(tmp)
+        return
+    try:
+        title = (data.get("title") or "").strip() or None
+        caption = (data.get("caption") or "").strip() or None
+        features = (data.get("features") or "").strip() or None
+        pos_fe = data.get("position")
+        pos_core = POS_FE2CORE.get(pos_fe) if pos_fe else None
+        accent = None
+        if data.get("accent_hex"):
+            name = (data.get("accent_name") or "custom").strip() or "custom"
+            accent = (name, str(data["accent_hex"]).strip().upper())
+        size = str(data.get("size") or cfg.get("size") or "900*1500")
+        if not re.match(r"^\d+\*\d+$", size):
+            raise RuntimeError("输出尺寸格式应为 宽*高，如 900*1500")
+        name = (data.get("name") or "")
+        name_base = os.path.splitext(os.path.basename(name))[0] if name else None
+        out_dir = out_dir_of(cfg)
+        input_url = ""
+        try:
+            os.makedirs(UPLOADS_DIR, exist_ok=True)
+            iname = "in_" + os.path.basename(tmp)
+            ipath = os.path.join(UPLOADS_DIR, iname)
+            if not os.path.exists(ipath):
+                shutil.copyfile(tmp, ipath)
+            input_url = "/uploads/" + iname
+        except OSError:
+            pass
+        _task_progress(task, 10, "正在分析图片…")
+        out, _, info, prompt = poster_core.generate(
+            tmp, title=title, caption=caption, features=features,
+            accent_override=accent, position_override=pos_core,
+            size=size, out_dir=out_dir, key=cfg["bailian_key"],
+            progress=lambda msg: _task_say(task, msg),
+            out_name_base=name_base)
+        theme = ""
+        if (cfg.get("naming") or "auto") == "auto":
+            _task_progress(task, 92, "正在智能命名…")
+            theme = name_from_image(tmp, cfg) or ""
+            if theme:
+                analysis = poster_core.analyze_image(tmp)
+                acc_part = accent[0].split()[0] if accent else analysis["accent_name"].split()[0]
+                pos_part = pos_core or analysis["position"]
+                base_name = "poster-%s-%s-%s" % (theme, acc_part, pos_part)
+                new_path = os.path.join(out_dir, base_name + ".png")
+                i = 1
+                while os.path.exists(new_path):
+                    new_path = os.path.join(out_dir, "%s-%d.png" % (base_name, i))
+                    i += 1
+                os.rename(out, new_path)
+                out = new_path
+        append_history({
+            "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "user": username,
+            "ip": task.get("ip") or "",
+            "file": name_base or "",
+            "theme": theme,
+            "title": title or "",
+            "accent": accent[0] if accent else "",
+            "position": pos_fe or "",
+            "size": size,
+            "input_url": input_url,
+            "prompt": prompt,
+            "url": "/outputs/" + os.path.basename(out),
+        })
+        with _TASK_LOCK:
+            task["state"] = "done"
+            task["progress"] = 100
+            task["message"] = "生成完成"
+            task["url"] = "/outputs/" + os.path.basename(out)
+            task["info"] = info
+    except RuntimeError as e:
+        with _TASK_LOCK:
+            task["state"] = "error"
+            task["error"] = str(e)
+    except Exception as e:
+        with _TASK_LOCK:
+            task["state"] = "error"
+            task["error"] = "服务器错误：" + str(e)
 
 
 # ---------- 用户系统 ----------
@@ -251,7 +361,7 @@ def call_deepseek(cfg, prompt, max_tokens=4000):
         if e.code == 401:
             raise RuntimeError("DeepSeek Key 无效，请到「模型设置」检查")
         if e.code == 402:
-            raise RuntimeError("DeepSeek 账户余额不足")
+            raise RuntimeError("DeepSeek 账户余额不足，请到 DeepSeek 平台充值后重试")
         if e.code == 429:
             raise RuntimeError("DeepSeek 触发限流，请稍后再试")
         raise RuntimeError("DeepSeek 接口错误（%d）" % e.code)
@@ -312,6 +422,8 @@ class Handler(BaseHTTPRequestHandler):
                 "admin_required": bool(admin_token_of(cfg)),
                 "size": cfg["size"],
             })
+        elif path.startswith("/api/task/"):
+            self._get_task(path)
         elif path.startswith("/api/file"):
             username = session_user(self)
             if not username:
@@ -381,6 +493,17 @@ class Handler(BaseHTTPRequestHandler):
             return json.loads(raw or b"{}")
         except ValueError:
             raise RuntimeError("JSON 格式错误")
+
+    def _get_task(self, path):
+        if not self._require_user():
+            return
+        task_id = os.path.basename(path)
+        with _TASK_LOCK:
+            t = TASKS.get(task_id)
+        if not t:
+            self._json({"error": "任务不存在或已过期"}, 404)
+            return
+        self._json({k: t.get(k) for k in ("state", "progress", "message", "url", "info", "error")})
 
     def _post_config(self, raw):
         data = self._load_json(raw)
@@ -523,71 +646,20 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as e:
             self._json({"error": str(e)}, 400)
             return
-        try:
-            title = (data.get("title") or "").strip() or None
-            caption = (data.get("caption") or "").strip() or None
-            features = (data.get("features") or "").strip() or None
-            pos_fe = data.get("position")
-            pos_core = POS_FE2CORE.get(pos_fe) if pos_fe else None
-            accent = None
-            if data.get("accent_hex"):
-                name = (data.get("accent_name") or "custom").strip() or "custom"
-                accent = (name, str(data["accent_hex"]).strip().upper())
-            size = str(data.get("size") or cfg.get("size") or "900*1500")
-            if not re.match(r"^\d+\*\d+$", size):
-                raise RuntimeError("输出尺寸格式应为 宽*高，如 900*1500")
-            name = (data.get("name") or "")
-            name_base = os.path.splitext(os.path.basename(name))[0] if name else None
-            out_dir = out_dir_of(cfg)
-            input_url = ""
-            try:
-                os.makedirs(UPLOADS_DIR, exist_ok=True)
-                iname = "in_" + os.path.basename(tmp)
-                ipath = os.path.join(UPLOADS_DIR, iname)
-                if not os.path.exists(ipath):
-                    shutil.copyfile(tmp, ipath)
-                input_url = "/uploads/" + iname
-            except OSError:
-                pass
-            out, _, info, prompt = poster_core.generate(
-                tmp, title=title, caption=caption, features=features,
-                accent_override=accent, position_override=pos_core,
-                size=size, out_dir=out_dir, key=cfg["bailian_key"],
-                out_name_base=name_base)
-            theme = ""
-            if (cfg.get("naming") or "auto") == "auto":
-                theme = name_from_image(tmp, cfg) or ""
-                if theme:
-                    analysis = poster_core.analyze_image(tmp)
-                    acc_part = accent[0].split()[0] if accent else analysis["accent_name"].split()[0]
-                    pos_part = pos_core or analysis["position"]
-                    base_name = "poster-%s-%s-%s" % (theme, acc_part, pos_part)
-                    new_path = os.path.join(out_dir, base_name + ".png")
-                    i = 1
-                    while os.path.exists(new_path):
-                        new_path = os.path.join(out_dir, "%s-%d.png" % (base_name, i))
-                        i += 1
-                    os.rename(out, new_path)
-                    out = new_path
-            append_history({
-                "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "user": username,
-                "ip": self.client_address[0],
-                "file": name_base or "",
-                "theme": theme,
-                "title": title or "",
-                "accent": accent[0] if accent else "",
-                "position": pos_fe or "",
-                "size": size,
-                "input_url": input_url,
-                "prompt": prompt,
-                "url": "/outputs/" + os.path.basename(out),
-            })
-            self._json({"url": "/outputs/" + os.path.basename(out), "info": info})
-        except RuntimeError as e:
-            self._json({"error": str(e)}, 502)
-        finally:
-            safe_unlink(tmp)
+        task_id = secrets.token_hex(8)
+        task = {"state": "queued", "progress": 0, "message": "任务已提交，准备开始…",
+                "url": None, "info": None, "error": None,
+                "ip": self.client_address[0]}
+        with _TASK_LOCK:
+            TASKS[task_id] = task
+            if len(TASKS) > 200:
+                for k in [k for k, v in TASKS.items()
+                          if v.get("state") in ("done", "error")][:60]:
+                    TASKS.pop(k, None)
+        threading.Thread(target=_run_generate_task,
+                         args=(task_id, username, data, cfg, tmp),
+                         daemon=True).start()
+        self._json({"task_id": task_id})
 
 
 def main():
