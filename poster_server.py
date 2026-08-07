@@ -34,6 +34,7 @@ HISTORY_FILE = os.path.join(DATA_DIR, "history.jsonl")
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 UPLOADS_DIR = os.path.join(DATA_DIR, "uploads")
 SESSIONS = {}  # token -> {"username": str, "expires": float}
+SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
 TASKS = {}  # task_id -> {state, progress, message, url, info, error, ip}
 _TASK_LOCK = threading.Lock()
 
@@ -59,6 +60,37 @@ POS_FE2CORE = dict(zip(POS_FE, POS_CORE))
 POS_CORE2FE = dict(zip(POS_CORE, POS_FE))
 
 _LOCK = threading.Lock()
+
+
+def load_sessions():
+    """启动时从磁盘恢复会话，保证服务重启不登出。"""
+    try:
+        with open(SESSIONS_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        now = time.time()
+        SESSIONS.clear()
+        for k, v in data.items():
+            if v.get("expires", 0) > now:
+                SESSIONS[k] = v
+    except (OSError, ValueError):
+        pass
+
+
+def save_sessions():
+    try:
+        now = time.time()
+        for k in [k for k, v in SESSIONS.items() if v.get("expires", 0) <= now]:
+            SESSIONS.pop(k, None)
+        tmp = SESSIONS_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(SESSIONS, f, ensure_ascii=False)
+        os.replace(tmp, SESSIONS_FILE)
+        try:
+            os.chmod(SESSIONS_FILE, 0o600)
+        except OSError:
+            pass
+    except OSError:
+        pass
 
 
 def load_config():
@@ -264,7 +296,8 @@ def verify_password(password, stored):
 
 def new_session(username):
     tok = secrets.token_hex(32)
-    SESSIONS[tok] = {"username": username, "expires": time.time() + 7 * 86400}
+    SESSIONS[tok] = {"username": username, "expires": time.time() + 30 * 86400}
+    save_sessions()
     return tok
 
 
@@ -671,6 +704,7 @@ def main():
     os.makedirs(TMP_DIR, exist_ok=True)
     os.makedirs(UPLOADS_DIR, exist_ok=True)
     load_config()  # 首次启动自动迁移百炼 Key
+    load_sessions()  # 恢复持久化会话
     srv = None
     for p in range(port, port + 10):
         try:
