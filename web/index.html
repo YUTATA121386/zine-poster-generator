@@ -1154,6 +1154,7 @@
       <div class="thumb-wrap" id="thumbWrap" style="display:none;">
         <img id="thumbImg" alt="预览">
         <div class="thumb-meta" id="thumbMeta"></div>
+        <button class="btn-small" id="rechooseBtn" type="button">重新选择</button>
       </div>
 
       <div class="analysis-loading" id="analysisLoading" style="display:none;">
@@ -1785,6 +1786,18 @@ function showThumb(name, dataURL){
   thumbImg.src = dataURL;
   thumbMeta.textContent = name;
 }
+
+$('rechooseBtn').addEventListener('click', () => {
+  currentImage = null;
+  currentFileName = '';
+  currentAnalysis = null;
+  fileInput.value = '';
+  thumbImg.src = '';
+  thumbWrap.style.display = 'none';
+  uploadZone.style.display = '';
+  analysisLoading.style.display = 'none';
+  analysisResult.style.display = 'none';
+});
 
 /* ---------- Analyze ---------- */
 async function analyze(dataURL){
