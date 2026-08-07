@@ -26,6 +26,7 @@ WEB_DIR = os.path.join(BASE_DIR, "web")
 OUT_DIR = os.path.join(BASE_DIR, "outputs")
 TMP_DIR = os.path.join(BASE_DIR, "tmp")
 CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
+HISTORY_FILE = os.path.join(BASE_DIR, "history.jsonl")
 
 DEFAULT_CONFIG = {
     "bailian_key": "",
@@ -35,6 +36,7 @@ DEFAULT_CONFIG = {
     "deepseek_models": ["deepseek-v4-pro", "deepseek-v4-flash"],
     "output_dir": "",
     "naming": "auto",
+    "admin_token": "",
     "size": "900*1500",
 }
 
@@ -87,6 +89,28 @@ def mask_key(k):
 
 def is_deployed():
     return os.environ.get("POSTER_DEPLOYED", "").strip().lower() in ("1", "true", "yes")
+
+
+def admin_token_of(cfg):
+    return (os.environ.get("POSTER_ADMIN_TOKEN") or cfg.get("admin_token") or "").strip()
+
+
+def append_history(rec):
+    try:
+        with _LOCK:
+            with open(HISTORY_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def load_history(limit=200):
+    try:
+        with open(HISTORY_FILE, encoding="utf-8") as f:
+            recs = [json.loads(line) for line in f if line.strip()]
+    except (OSError, ValueError):
+        return []
+    return list(reversed(recs[-limit:]))
 
 
 def out_dir_of(cfg):
@@ -231,6 +255,7 @@ class Handler(BaseHTTPRequestHandler):
                 "output_dir": cfg.get("output_dir") or "",
                 "naming": cfg.get("naming") or "auto",
                 "deployed": is_deployed(),
+                "admin_required": bool(admin_token_of(cfg)),
                 "size": cfg["size"],
             })
         elif path.startswith("/outputs/"):
@@ -256,6 +281,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/api/config":
                 self._post_config(raw)
+            elif path == "/api/history":
+                self._post_history(raw)
             elif path == "/api/analyze":
                 self._post_analyze(raw)
             elif path == "/api/copy":
@@ -287,6 +314,8 @@ class Handler(BaseHTTPRequestHandler):
                 cfg["deepseek_key"] = str(data["deepseek_key"]).strip()
             if data.get("output_dir"):
                 cfg["output_dir"] = str(data["output_dir"]).strip()
+            if data.get("admin_token") is not None:
+                cfg["admin_token"] = str(data["admin_token"]).strip()
         for k in ("image_model", "deepseek_model", "size"):
             if data.get(k):
                 cfg[k] = str(data[k]).strip()
@@ -294,6 +323,15 @@ class Handler(BaseHTTPRequestHandler):
             cfg["naming"] = data["naming"]
         save_config(cfg)  # 非密钥字段（模型/命名/尺寸）始终持久化
         self._json({"ok": True, "deployed": deployed})
+
+    def _post_history(self, raw):
+        data = self._load_json(raw)
+        cfg = load_config()
+        tok = admin_token_of(cfg)
+        if tok and str(data.get("token") or "") != tok:
+            self._json({"error": "管理密码错误"}, 403)
+            return
+        self._json({"records": load_history()})
 
     def _post_analyze(self, raw):
         data = self._load_json(raw)
@@ -365,8 +403,9 @@ class Handler(BaseHTTPRequestHandler):
                 accent_override=accent, position_override=pos_core,
                 size=size, out_dir=out_dir, key=cfg["bailian_key"],
                 out_name_base=name_base)
+            theme = ""
             if (cfg.get("naming") or "auto") == "auto":
-                theme = name_from_image(tmp, cfg)
+                theme = name_from_image(tmp, cfg) or ""
                 if theme:
                     analysis = poster_core.analyze_image(tmp)
                     acc_part = accent[0].split()[0] if accent else analysis["accent_name"].split()[0]
@@ -379,6 +418,17 @@ class Handler(BaseHTTPRequestHandler):
                         i += 1
                     os.rename(out, new_path)
                     out = new_path
+            append_history({
+                "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "ip": self.client_address[0],
+                "file": name_base or "",
+                "theme": theme,
+                "title": title or "",
+                "accent": accent[0] if accent else "",
+                "position": pos_fe or "",
+                "size": size,
+                "url": "/outputs/" + os.path.basename(out),
+            })
             self._json({"url": "/outputs/" + os.path.basename(out), "info": info})
         except RuntimeError as e:
             self._json({"error": str(e)}, 502)
