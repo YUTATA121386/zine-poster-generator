@@ -1,7 +1,9 @@
 # 开发与部署笔记（新会话必读）
 
 ## 线上环境（当前）
-- 服务器：阿里云轻量应用服务器（Ubuntu），公网 IP `59.110.224.189`；域名 `yutata.online`（审核中，审核通过后绑 A 记录到此 IP）
+- 服务器：阿里云轻量应用服务器（Ubuntu），公网 IP `59.110.224.189`
+- 域名 `yutata.online`：已注册（阿里云/万网 DNS）、已绑 A 记录 `@ -> 59.110.224.189`，`http://yutata.online` 实测可访问；`www` 子域未配置（如需访问需补 A 记录）
+- 备案：暂缓。阿里云备案要求服务器包月/包年 >= 3 个月（当前月付 45 元/月不满足），决定暂不申请；未备案域名解析到大陆服务器存在被拦截风险，若被拦截需购买 3 个月套餐后再走 ICP 备案（beian.aliyun.com 提交 -> 初审 1-2 天 -> 工信部短信核验 -> 管局审核 1-2 周 -> 页脚加备案号并链到 beian.miit.gov.cn）
 - 服务：systemd 单元 `poster-gen`，监听 80 端口（`POSTER_PORT=80`）
 - 代码目录：`/opt/poster-gen`（git clone 自 GitHub `YUTATA121386/zine-poster-generator`）
 - 数据目录：`/var/lib/poster-gen`（`users.json`、`sessions.json`、`history.jsonl`、`uploads/`、`outputs/`）
