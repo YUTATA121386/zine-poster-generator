@@ -16,7 +16,7 @@
     --ok: #3A6B3F; --warn: #B8860B;
     --blob1: rgba(242,206,132,.55); --blob2: rgba(196,214,168,.50); --blob3: rgba(247,222,196,.50);
     --glass: rgba(255,255,255,0.45); --glass-mid: rgba(255,255,255,0.55); --glass-hi: rgba(255,255,255,0.75); --glass-lo: rgba(255,255,255,0.35);
-    --radius: 6px; --shadow: 0 10px 30px rgba(42,38,32,0.06);
+    --radius: 6px; --shadow: 0 10px 30px rgba(42,38,32,0.06); --overlay: rgba(42,38,32,0.45);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -31,7 +31,7 @@
     --ok: #3A6B3F; --warn: #B8860B;
     --blob1: rgba(168,206,228,.55); --blob2: rgba(210,226,200,.45); --blob3: rgba(240,228,200,.42);
     --glass: rgba(255,255,255,0.45); --glass-mid: rgba(255,255,255,0.55); --glass-hi: rgba(255,255,255,0.75); --glass-lo: rgba(255,255,255,0.35);
-    --radius: 6px; --shadow: 0 10px 30px rgba(28,46,58,0.07);
+    --radius: 6px; --shadow: 0 10px 30px rgba(28,46,58,0.07); --overlay: rgba(28,35,41,0.45);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -46,7 +46,7 @@
     --ok: #3A6B3F; --warn: #B8860B;
     --blob1: rgba(238,166,116,.50); --blob2: rgba(214,138,148,.45); --blob3: rgba(176,150,206,.40);
     --glass: rgba(255,255,255,0.42); --glass-mid: rgba(255,255,255,0.52); --glass-hi: rgba(255,255,255,0.72); --glass-lo: rgba(255,255,255,0.32);
-    --radius: 6px; --shadow: 0 10px 30px rgba(90,40,20,0.08);
+    --radius: 6px; --shadow: 0 10px 30px rgba(90,40,20,0.08); --overlay: rgba(42,30,25,0.45);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -61,7 +61,7 @@
     --ok: #7fbf83; --warn: #d4a94e;
     --blob1: rgba(120,90,40,.30); --blob2: rgba(60,80,120,.25); --blob3: rgba(100,50,40,.25);
     --glass: rgba(255,255,255,0.10); --glass-mid: rgba(255,255,255,0.14); --glass-hi: rgba(255,255,255,0.18); --glass-lo: rgba(255,255,255,0.08);
-    --radius: 6px; --shadow: 0 10px 30px rgba(0,0,0,0.45);
+    --radius: 6px; --shadow: 0 10px 30px rgba(0,0,0,0.45); --overlay: rgba(0,0,0,0.60);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -255,7 +255,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(42,38,32,0.45);
+    background: var(--overlay);
     backdrop-filter: blur(3px);
   }
 
