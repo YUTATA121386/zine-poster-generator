@@ -5,29 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ZINE 海报生成器</title>
 <style>
-  :root {
-    --paper: #F2EADA;
-    --paper2: #EFE7D8;
-    --card: #FAF6EE;
-    --ink: #2A2620;
-    --ink80: rgba(42,38,32,0.80);
-    --ink60: rgba(42,38,32,0.60);
-    --ink40: rgba(42,38,32,0.40);
-    --ink25: rgba(42,38,32,0.25);
-    --ink12: rgba(42,38,32,0.12);
-    --ink08: rgba(42,38,32,0.08);
-    --ink04: rgba(42,38,32,0.04);
-    --accent: #C8452A;
-    --accentDark: #A33620;
-    --accentLight: #E26B52;
-    --sepia: #8C7B66;
-    --sepiaLine: rgba(140,123,102,0.35);
-    --ok: #3A6B3F;
-    --warn: #B8860B;
-    --radius: 6px;
-    --shadow: 0 10px 30px rgba(42,38,32,0.06);
-    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-    --font-serif: Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root[data-palette="morning"] {
+    --paper: #f4efe3; --paper2: #ede6d2; --card: #fbf8f0;
+    --ink: #251f16;
+    --ink80: rgba(37,31,22,0.80); --ink60: rgba(37,31,22,0.60); --ink40: rgba(37,31,22,0.40);
+    --ink25: rgba(37,31,22,0.25); --ink12: rgba(37,31,22,0.12); --ink08: rgba(37,31,22,0.08); --ink04: rgba(37,31,22,0.04);
+    --accent: #a8761f; --accentDark: #8a6117; --accentLight: #c49a4e;
+    --sepia: #8d8268; --sepiaLine: rgba(141,130,104,0.35);
+    --ok: #3A6B3F; --warn: #B8860B;
+    --blob1: rgba(242,206,132,.55); --blob2: rgba(196,214,168,.50); --blob3: rgba(247,222,196,.50);
+    --glass: rgba(255,255,255,0.45); --glass-mid: rgba(255,255,255,0.55); --glass-hi: rgba(255,255,255,0.75); --glass-lo: rgba(255,255,255,0.35);
+    --radius: 6px; --shadow: 0 10px 30px rgba(42,38,32,0.06);
+    --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
+    --font-mono: 'JetBrains Mono',monospace;
+  }
+  :root[data-palette="noon"] {
+    --paper: #e8eef0; --paper2: #dde6e4; --card: #f6faf9;
+    --ink: #1c2329;
+    --ink80: rgba(28,35,41,0.80); --ink60: rgba(28,35,41,0.60); --ink40: rgba(28,35,41,0.40);
+    --ink25: rgba(28,35,41,0.25); --ink12: rgba(28,35,41,0.12); --ink08: rgba(28,35,41,0.08); --ink04: rgba(28,35,41,0.04);
+    --accent: #2b6f8f; --accentDark: #235a75; --accentLight: #5a93b3;
+    --sepia: #75848e; --sepiaLine: rgba(117,132,142,0.35);
+    --ok: #3A6B3F; --warn: #B8860B;
+    --blob1: rgba(168,206,228,.55); --blob2: rgba(210,226,200,.45); --blob3: rgba(240,228,200,.42);
+    --glass: rgba(255,255,255,0.45); --glass-mid: rgba(255,255,255,0.55); --glass-hi: rgba(255,255,255,0.75); --glass-lo: rgba(255,255,255,0.35);
+    --radius: 6px; --shadow: 0 10px 30px rgba(28,46,58,0.07);
+    --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
+    --font-mono: 'JetBrains Mono',monospace;
+  }
+  :root[data-palette="dusk"] {
+    --paper: #f1e2d6; --paper2: #e6d3c3; --card: #faf3ea;
+    --ink: #2a1e19;
+    --ink80: rgba(42,30,25,0.80); --ink60: rgba(42,30,25,0.60); --ink40: rgba(42,30,25,0.40);
+    --ink25: rgba(42,30,25,0.25); --ink12: rgba(42,30,25,0.12); --ink08: rgba(42,30,25,0.08); --ink04: rgba(42,30,25,0.04);
+    --accent: #b04a30; --accentDark: #933b25; --accentLight: #c96b52;
+    --sepia: #937a68; --sepiaLine: rgba(147,122,104,0.35);
+    --ok: #3A6B3F; --warn: #B8860B;
+    --blob1: rgba(238,166,116,.50); --blob2: rgba(214,138,148,.45); --blob3: rgba(176,150,206,.40);
+    --glass: rgba(255,255,255,0.42); --glass-mid: rgba(255,255,255,0.52); --glass-hi: rgba(255,255,255,0.72); --glass-lo: rgba(255,255,255,0.32);
+    --radius: 6px; --shadow: 0 10px 30px rgba(90,40,20,0.08);
+    --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
+    --font-mono: 'JetBrains Mono',monospace;
+  }
+  :root[data-palette="night"] {
+    --paper: #181512; --paper2: #241f1a; --card: #262019;
+    --ink: #ece5d8;
+    --ink80: rgba(236,229,216,0.80); --ink60: rgba(236,229,216,0.60); --ink40: rgba(236,229,216,0.40);
+    --ink25: rgba(236,229,216,0.30); --ink12: rgba(236,229,216,0.20); --ink08: rgba(236,229,216,0.12); --ink04: rgba(236,229,216,0.06);
+    --accent: #caa14f; --accentDark: #b38a3c; --accentLight: #dfbc77;
+    --sepia: #837764; --sepiaLine: rgba(131,119,100,0.45);
+    --ok: #7fbf83; --warn: #d4a94e;
+    --blob1: rgba(120,90,40,.30); --blob2: rgba(60,80,120,.25); --blob3: rgba(100,50,40,.25);
+    --glass: rgba(255,255,255,0.10); --glass-mid: rgba(255,255,255,0.14); --glass-hi: rgba(255,255,255,0.18); --glass-lo: rgba(255,255,255,0.08);
+    --radius: 6px; --shadow: 0 10px 30px rgba(0,0,0,0.45);
+    --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
+    --font-mono: 'JetBrains Mono',monospace;
   }
 
   * { box-sizing: border-box; }
@@ -53,7 +90,7 @@
     pointer-events: none;
     z-index: 0;
     opacity: 0.35;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+    background-image: radial-gradient(60% 50% at 18% 12%, var(--blob1), transparent 70%), radial-gradient(50% 45% at 85% 80%, var(--blob2), transparent 70%), radial-gradient(45% 40% at 65% 20%, var(--blob3), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
   }
 
   h1, h2, h3 {
@@ -97,7 +134,7 @@
     font-size: 16px;
     line-height: 1.4;
     color: var(--ink);
-    background: rgba(255,255,255,0.55);
+    background: var(--glass-mid);
     border: 1px solid var(--ink12);
     border-radius: var(--radius);
     padding: 11px 12px;
@@ -112,7 +149,7 @@
   textarea:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(200,69,42,0.12);
-    background: rgba(255,255,255,0.75);
+    background: var(--glass-hi);
   }
 
   textarea {
@@ -181,12 +218,12 @@
     padding: 0 12px;
     font-size: 13px;
     color: var(--ink80);
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
   }
 
   .icon-btn:hover {
-    background: rgba(255,255,255,0.8);
+    background: var(--glass-hi);
     border-color: var(--ink25);
   }
 
@@ -301,7 +338,7 @@
     padding: 6px 12px;
     font-size: 12px;
     color: var(--ink60);
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
     border-radius: 999px;
   }
@@ -320,7 +357,7 @@
     font-size: 12px;
     color: var(--ink80);
     padding: 6px 10px;
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
     border-radius: 999px;
   }
@@ -357,14 +394,14 @@
     text-align: center;
     border: 1.5px dashed var(--ink25);
     border-radius: var(--radius);
-    background: rgba(255,255,255,0.35);
+    background: var(--glass-lo);
     cursor: pointer;
     transition: border-color .2s, background .2s;
   }
 
   .upload-zone:hover {
     border-color: var(--accent);
-    background: rgba(255,255,255,0.55);
+    background: var(--glass-mid);
   }
 
   .upload-zone .big {
@@ -410,7 +447,7 @@
     padding: 14px;
     font-size: 13px;
     color: var(--ink80);
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
     border-radius: var(--radius);
   }
@@ -440,7 +477,7 @@
 
   .info-grid > div {
     padding: 12px;
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
     border-radius: var(--radius);
   }
@@ -465,7 +502,7 @@
     gap: 12px;
     margin-bottom: 18px;
     padding: 12px;
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
     border-radius: var(--radius);
   }
@@ -492,7 +529,7 @@
 
   .position-wrap {
     padding: 14px;
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
     border-radius: var(--radius);
   }
@@ -513,7 +550,7 @@
 
   .pos-cell {
     aspect-ratio: 1 / 1;
-    background: rgba(255,255,255,0.55);
+    background: var(--glass-mid);
     border: 1px solid var(--ink12);
     border-radius: 4px;
     cursor: pointer;
@@ -623,7 +660,7 @@
   .result-frame {
     margin-top: 18px;
     padding: 14px;
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
     border: 1px solid var(--ink12);
     border-radius: var(--radius);
   }
@@ -678,7 +715,7 @@
   }
   .admin-tab.active {
     color: var(--ink);
-    background: rgba(255,255,255,0.5);
+    background: var(--glass-mid);
     border-color: var(--ink12);
   }
   .admin-body { min-height: 320px; }
@@ -701,7 +738,7 @@
     overflow-x: auto;
     border: 1px solid var(--ink12);
     border-radius: 12px;
-    background: rgba(255,255,255,0.45);
+    background: var(--glass);
   }
   .admin-table {
     width: 100%;
@@ -888,7 +925,7 @@
   }
 
   .close-drawer:hover {
-    background: rgba(255,255,255,0.5);
+    background: var(--glass-mid);
     border-color: var(--ink12);
     color: var(--ink);
   }
@@ -920,7 +957,7 @@
   .drawer-foot {
     padding: 18px 22px calc(18px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--ink12);
-    background: rgba(255,255,255,0.35);
+    background: var(--glass-lo);
   }
 
   .drawer-foot .hint {
@@ -1099,7 +1136,33 @@
   .btn-primary:disabled{ opacity:.65; cursor:not-allowed; }
   .upload-zone{ cursor:pointer; }
 </style>
-</head>
+<script>
+(function () {
+  var PALS = ["auto", "morning", "noon", "dusk", "night"];
+  var saved = localStorage.getItem("pg_tool_palette") || "auto";
+  function autoPal() {
+    var h = new Date().getHours();
+    if (h >= 5 && h < 11) return "morning";
+    if (h >= 11 && h < 17) return "noon";
+    if (h >= 17 && h < 21) return "dusk";
+    return "night";
+  }
+  function apply(p) {
+    document.documentElement.setAttribute("data-palette", p === "auto" ? autoPal() : p);
+    var btn = document.getElementById("paletteBtn");
+    if (btn) btn.textContent = p === "auto" ? "自动" : ({ morning: "晨", noon: "午", dusk: "暮", night: "夜" })[p];
+  }
+  function cycle() {
+    var i = PALS.indexOf(saved);
+    saved = PALS[(i + 1) % PALS.length];
+    localStorage.setItem("pg_tool_palette", saved);
+    apply(saved);
+  }
+  apply(saved);
+  var btn = document.getElementById("paletteBtn");
+  if (btn) btn.addEventListener("click", cycle);
+})();
+</script></head>
 <body>
 
 <!-- Login -->
@@ -1135,6 +1198,7 @@
     <button class="icon-btn" id="openAdminBtn" style="display:none;">管理台</button>
     <button class="icon-btn" id="openHistoryBtn">生成记录</button>
     <button class="icon-btn" id="openSettingsBtn">模型设置</button>
+<button class="icon-btn" id="paletteBtn">自动</button>
   </div>
 </header>
 
