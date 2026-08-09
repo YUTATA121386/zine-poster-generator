@@ -55,6 +55,15 @@
 - 生成是异步任务：后台线程执行，前端轮询进度，刷新页面后任务继续执行，进度可恢复
 - 429 限流自动重试；403 = 配额/免费额度问题；API 欠费会报错，界面给出明确提示（充值后恢复）
 
+## 门户架构（新，2026-08-09）
+- `/`：登录门户（`web/index.html`，Kimi K3 设计）。未登录显示登录/注册；登录后两个分区：知识文档区 `/kb/`、提效工具区 `/tool/`
+- `/tool/`：海报生成器（`web/tool.html`，原 `web/index.html`），需登录；API 路径不变
+- `/kb/`：知识库（`web/kb/`，VitePress 构建产物，`base=/kb/`），需登录；GitHub Pages 留档版公开（`base=/`）
+- 管理员规则：仅用户名 `YUTATA` 可为管理员（`poster_server.py` 的 `ADMIN_USER`）；注册只给 YUTATA 赋 admin，禁止删除 YUTATA
+- 部署：`python scripts/deploy_site.py`（本地构建 KB `/kb/` 版 → SFTP 上传 poster_server.py/web 文件/kb 目录 → `systemctl restart poster-gen` → 自检；密码走 `ALI_PWD`）
+- KB 双 base 构建：`docs/.vitepress/config.mts` 读 `KB_BASE` 环境变量；GitHub Pages workflow 保持默认 `/`，服务器构建用 `/kb/`
+- Kimi K3 调用注意：`kimi-k3` 是思考型模型，流式输出先 `reasoning_content` 后 `content`，`max_tokens` 需放大（设计稿建议 16000，否则推理吃光配额导致 content 为空）
+
 ## 图片生成（qwen-image-3.0）
 - I2I 流程：上传原图 -> 程序分析强调色/构图位置（`poster_core.py`，纯程序分析）-> 拼接提示词 -> 百炼 API 生成
 - 输出命名：`poster-<图片名>-<强调色>-<位置>.png`

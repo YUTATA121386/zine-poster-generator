@@ -2,7 +2,9 @@
 """poster-server：Zine 海报生成器本地 Web 服务（Python 标准库，零依赖）。
 
 启动: python poster_server.py [端口]   默认 8765，自动打开浏览器。
-前端: web/index.html（Kimi 设计）; 输出: outputs/; 配置: config.json（Key 仅存本机）。
+前端: web/index.html（登录门户，Kimi 设计）; web/tool.html（海报生成器）;
+知识库: web/kb/（VitePress 构建产物，base=/kb/，登录后访问）。
+输出: outputs/; 配置: config.json（Key 仅存本机）。
 """
 import base64
 import hashlib
@@ -35,6 +37,8 @@ USERS_FILE = os.path.join(DATA_DIR, "users.json")
 UPLOADS_DIR = os.path.join(DATA_DIR, "uploads")
 SESSIONS = {}  # token -> {"username": str, "expires": float}
 SESSIONS_FILE = os.path.join(DATA_DIR, "sessions.json")
+ADMIN_USER = "YUTATA"  # 唯一管理员用户名
+KB_DIR = os.path.join(WEB_DIR, "kb")  # 知识库静态目录（VitePress 构建产物，base=/kb/）
 TASKS = {}  # task_id -> {state, progress, message, url, info, error, ip}
 _TASK_LOCK = threading.Lock()
 
@@ -342,9 +346,19 @@ def new_session(username):
 
 
 def session_user(self):
+    tok = ""
     hdr = self.headers.get("Authorization") or ""
     if hdr.startswith("Bearer "):
-        sess = SESSIONS.get(hdr[7:].strip())
+        tok = hdr[7:].strip()
+    if not tok:
+        cookie = self.headers.get("Cookie") or ""
+        for part in cookie.split(";"):
+            part = part.strip()
+            if part.startswith("pg_session="):
+                tok = part[len("pg_session="):]
+                break
+    if tok:
+        sess = SESSIONS.get(tok)
         if sess and sess["expires"] > time.time():
             return sess["username"]
     return None
@@ -449,11 +463,13 @@ class Handler(BaseHTTPRequestHandler):
         sys.stderr.write("[%s] %s\n" % (self.log_date_time_string(), fmt % args))
 
     # ---------- 基础 ----------
-    def _json(self, obj, status=200):
+    def _json(self, obj, status=200, extra_headers=None):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        for k, v in (extra_headers or {}).items():
+            self.send_header(k, v)
         self.end_headers()
         self.wfile.write(body)
 
@@ -465,23 +481,80 @@ class Handler(BaseHTTPRequestHandler):
             raise ValueError("请求体过大")
         return self.rfile.read(ln)
 
-    def _serve_file(self, fp, ctype):
+    def _serve_file(self, fp, ctype, status=200):
         if not os.path.isfile(fp):
             self._json({"error": "not found"}, 404)
             return
         with open(fp, "rb") as f:
             body = f.read()
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         self.wfile.write(body)
 
+    KB_TYPES = {
+        ".html": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+        ".mjs": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".map": "application/json",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".svg": "image/svg+xml",
+        ".webp": "image/webp",
+        ".avif": "image/avif",
+        ".ico": "image/x-icon",
+        ".woff": "font/woff",
+        ".woff2": "font/woff2",
+        ".ttf": "font/ttf",
+        ".otf": "font/otf",
+        ".txt": "text/plain; charset=utf-8",
+        ".xml": "text/xml; charset=utf-8",
+        ".md": "text/plain; charset=utf-8",
+        ".pdf": "application/pdf",
+    }
+
+    def _serve_kb(self, path):
+        rel = unquote(urlparse(path).path)[len("/kb/"):]
+        fp = os.path.join(KB_DIR, rel)
+        if os.path.isdir(fp):
+            fp = os.path.join(fp, "index.html")
+        if not os.path.realpath(fp).startswith(os.path.realpath(KB_DIR) + os.sep):
+            self._json({"error": "forbidden"}, 403)
+            return
+        if not os.path.isfile(fp):
+            fp404 = os.path.join(KB_DIR, "404.html")
+            if os.path.isfile(fp404):
+                self._serve_file(fp404, "text/html; charset=utf-8", 404)
+            else:
+                self._json({"error": "not found"}, 404)
+            return
+        ext = os.path.splitext(fp)[1].lower()
+        ctype = self.KB_TYPES.get(ext, "application/octet-stream")
+        self._serve_file(fp, ctype)
+
+    def _redirect(self, location):
+        self.send_response(302)
+        self.send_header("Location", location)
+        self.end_headers()
+
+    def _session_cookie_value(self, tok, max_age=30 * 86400):
+        return "pg_session=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax" % (tok, max_age)
+
+    def _expired_cookie_value(self):
+        return "pg_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
+
     # ---------- GET ----------
     def do_GET(self):
         path = urlparse(self.path).path
-        if path == "/api/config":
+        if path == "/api/me":
+            self._post_me(b"{}")
+        elif path == "/api/config":
             cfg = load_config()
             self._json({
                 "bailian": {"key_set": bool(cfg["bailian_key"]), "key_mask": mask_key(cfg["bailian_key"])},
@@ -523,6 +596,21 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(os.path.join(out_dir_of(load_config()), name), ctype)
         elif path in ("/", "/index.html"):
             self._serve_file(os.path.join(WEB_DIR, "index.html"), "text/html; charset=utf-8")
+        elif path in ("/tool", "/tool/"):
+            if not session_user(self):
+                self._redirect("/")
+                return
+            self._serve_file(os.path.join(WEB_DIR, "tool.html"), "text/html; charset=utf-8")
+        elif path == "/kb":
+            if not session_user(self):
+                self._redirect("/")
+                return
+            self._redirect("/kb/")
+        elif path.startswith("/kb/"):
+            if not session_user(self):
+                self._redirect("/")
+                return
+            self._serve_kb(path)
         elif path == "/favicon.ico":
             self.send_response(204)
             self.end_headers()
@@ -544,6 +632,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._post_register(raw)
             elif path == "/api/login":
                 self._post_login(raw)
+            elif path == "/api/logout":
+                self._post_logout(raw)
             elif path == "/api/me":
                 self._post_me(raw)
             elif path == "/api/history":
@@ -632,12 +722,14 @@ class Handler(BaseHTTPRequestHandler):
         if username in users:
             self._json({"error": "用户名已存在"}, 400)
             return
-        is_admin = len(users) == 0  # 第一个注册用户自动成为管理员
+        is_admin = username == ADMIN_USER  # 仅 YUTATA 可为管理员
         users[username] = {"pwd": hash_password(password), "admin": is_admin,
                            "created": time.strftime("%Y-%m-%d %H:%M:%S")}
         save_users(users)
-        self._json({"ok": True, "token": new_session(username),
-                    "username": username, "is_admin": is_admin})
+        tok = new_session(username)
+        self._json({"ok": True, "token": tok,
+                    "username": username, "is_admin": is_admin},
+                   extra_headers={"Set-Cookie": self._session_cookie_value(tok)})
 
     def _post_login(self, raw):
         data = self._load_json(raw)
@@ -648,8 +740,26 @@ class Handler(BaseHTTPRequestHandler):
         if not stored or not verify_password(password, stored.get("pwd", "")):
             self._json({"error": "用户名或密码错误"}, 401)
             return
-        self._json({"ok": True, "token": new_session(username),
-                    "username": username, "is_admin": bool(stored.get("admin"))})
+        tok = new_session(username)
+        self._json({"ok": True, "token": tok,
+                    "username": username, "is_admin": bool(stored.get("admin"))},
+                   extra_headers={"Set-Cookie": self._session_cookie_value(tok)})
+
+    def _post_logout(self, raw):
+        hdr = self.headers.get("Authorization") or ""
+        tok = hdr[7:].strip() if hdr.startswith("Bearer ") else ""
+        if not tok:
+            cookie = self.headers.get("Cookie") or ""
+            for part in cookie.split(";"):
+                part = part.strip()
+                if part.startswith("pg_session="):
+                    tok = part[len("pg_session="):]
+                    break
+        if tok:
+            SESSIONS.pop(tok, None)
+            save_sessions()
+        self._json({"ok": True},
+                   extra_headers={"Set-Cookie": self._expired_cookie_value()})
 
     def _post_me(self, raw):
         username = self._require_user()
@@ -719,6 +829,9 @@ class Handler(BaseHTTPRequestHandler):
         users = load_users()
         if target == username:
             self._json({"error": "不能删除当前账号"}, 400)
+            return
+        if target == ADMIN_USER:
+            self._json({"error": "不能删除内置管理员"}, 400)
             return
         if target not in users:
             self._json({"error": "账号不存在"}, 404)
