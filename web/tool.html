@@ -327,12 +327,26 @@
   }
 
   .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-family: var(--font-serif);
     font-size: 17px;
     font-weight: 600;
     letter-spacing: 0.04em;
     color: var(--ink);
     white-space: nowrap;
+  }
+
+  .logo-disc {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--ink12);
+    box-shadow: 0 6px 14px -6px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, .2);
+    animation: spin 18s linear infinite;
   }
 
   .actions {
@@ -418,6 +432,18 @@
     background: var(--glass-mid);
   }
 
+  .up-vinyl {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 2px;
+    border: 3px solid var(--ink12);
+    box-shadow: 0 10px 22px -10px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, .25);
+    animation: spin 16s linear infinite;
+    opacity: .9;
+  }
+
   .upload-zone .big {
     font-family: var(--font-serif);
     font-size: 18px;
@@ -477,6 +503,10 @@
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-disc, .up-vinyl { animation: none; }
+  }
 
   #analysisResult {
     margin-top: 20px;
@@ -1205,7 +1235,7 @@
 
 <!-- Header -->
 <header>
-  <div class="logo">ZINE 海报生成器</div>
+  <div class="logo"><img class="logo-disc" src="/art/vinyl.jpg" alt="" aria-hidden="true"><span>ZINE 海报生成器</span></div>
   <div class="actions">
     <a class="icon-btn" id="backPortalBtn" href="/" title="回到登录门户">← 返回门户</a>
     <span class="status-pill">
@@ -1229,6 +1259,7 @@
       <h2 class="section-title head-lp">图片与分析</h2>
 
       <div class="upload-zone" id="uploadZone">
+        <img class="up-vinyl" src="/art/vinyl.jpg" alt="" aria-hidden="true">
         <div class="big">点击或拖拽上传照片</div>
         <div class="hint">支持 JPG、PNG、WebP，建议 1–8 MB</div>
       </div>
