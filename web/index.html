@@ -48,6 +48,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
   background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0 1px,transparent 1px 3px)}
 .bg-paper{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.13;background:url(/art/paper.jpg) repeat;background-size:420px;mix-blend-mode:multiply}
+.bg-glass{position:fixed;inset:0;z-index:0;pointer-events:none;background:url(/art/glass.jpg) center/cover no-repeat;opacity:.4;mix-blend-mode:soft-light}
+:root[data-palette="night"] .bg-glass{opacity:.22;mix-blend-mode:screen}
 ::selection{background:var(--accent);color:var(--bg)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 a{color:inherit}
@@ -140,7 +142,14 @@ main{flex:1}
 .hole{position:absolute;left:27px;width:10px;height:10px;border-radius:50%;background:var(--paper2);border:1px solid var(--line2)}
 .hole.a{top:26px}
 .hole.b{bottom:26px}
-.stamp{position:absolute;top:24px;right:24px;width:56px;height:56px;display:grid;place-items:center;transform:rotate(8deg);border:2px solid var(--accent);border-radius:3px;box-shadow:inset 0 0 0 3px var(--glass-hi),inset 0 0 0 4px var(--accent);color:var(--accent);font-family:var(--serif);font-size:14px;line-height:1.1;letter-spacing:.08em;writing-mode:vertical-rl;opacity:.92}
+.card-poster{position:absolute;top:50%;right:28px;width:100px;height:100px;transform:translateY(-50%) rotate(3deg);opacity:.96}
+.card-poster svg{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 18px rgba(60,40,20,.18))}
+.card-poster .pp-sheet{fill:var(--paper2);stroke:var(--line2)}
+.card-poster .pp-frame{fill:var(--glass-lo);stroke:var(--ink25)}
+.card-poster .pp-title{stroke:var(--ink);stroke-linecap:round}
+.card-poster .pp-line{stroke:var(--ink25);stroke-linecap:round}
+.card-poster .pp-accent{fill:var(--accent);stroke:var(--accent)}
+.card-poster .pp-sun{fill:none;stroke:var(--accent);stroke-width:1.5}
 
 footer{border-top:1px solid var(--line)}
 footer .wrap{padding-top:18px;padding-bottom:24px;text-align:center;font-size:11px;letter-spacing:.14em;color:var(--ink3)}
@@ -163,7 +172,7 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
   .card-body{max-width:100%}
   .card-paper .card-body{padding-right:56px}
   .disc{right:-64px;width:170px;height:170px;opacity:.5;animation-duration:40s}
-  .stamp{width:48px;height:48px;font-size:12px;top:18px;right:18px}
+  .card-poster{width:76px;height:76px;right:18px}
   .hole{left:23px}
   .card-paper::before{left:28px}
 }
@@ -200,6 +209,7 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 </script></head>
 <body>
 <div class="bg-paper" aria-hidden="true"></div>
+<div class="bg-glass" aria-hidden="true"></div>
 
 <header class="brandbar">
   <div class="wrap brandbar-in">
@@ -304,7 +314,19 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
         <span class="go">打开工具 <span class="arr">&rarr;</span></span>
         <span class="hole a" aria-hidden="true"></span>
         <span class="hole b" aria-hidden="true"></span>
-        <span class="stamp" aria-hidden="true">提<br>效</span>
+        <span class="card-poster" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <rect class="pp-sheet" x="6" y="8" width="88" height="84" rx="4"/>
+            <rect class="pp-frame" x="15" y="16" width="70" height="38" rx="3"/>
+            <circle class="pp-sun" cx="38" cy="33" r="7"/>
+            <path d="M20 52 L34 36 L44 46 L54 34 L72 52" fill="none" stroke="var(--ink25)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <line class="pp-title" x1="15" y1="62" x2="48" y2="62" stroke-width="3"/>
+            <line class="pp-line" x1="15" y1="69.5" x2="62" y2="69.5" stroke-width="1.8"/>
+            <line class="pp-line" x1="15" y1="76" x2="55" y2="76" stroke-width="1.8"/>
+            <rect class="pp-accent" x="15" y="82" width="34" height="5" rx="2.5"/>
+            <circle class="pp-accent" cx="84" cy="16" r="3"/>
+          </svg>
+        </span>
       </a>
 
     </div>
