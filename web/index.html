@@ -123,7 +123,8 @@ main{flex:1}
 .card-dark .go{color:var(--accent)}
 .card-dark:hover{border-color:var(--accent)}
 
-.disc{position:absolute;top:50%;right:-58px;width:216px;height:216px;border-radius:50%;transform:translateY(-50%);border:10px solid var(--dark);background:url(/art/vinyl.jpg) center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),inset 0 0 36px rgba(0,0,0,.42),0 26px 46px -22px rgba(0,0,0,.6);animation:discSpin 26s linear infinite;will-change:transform}
+.disc{position:absolute;top:50%;right:-58px;width:216px;height:216px;border-radius:50%;transform:translateY(-50%);border:10px solid var(--dark);background:#241f18;box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),inset 0 0 46px rgba(0,0,0,.55),0 26px 46px -22px rgba(0,0,0,.6);animation:discSpin 26s linear infinite;will-change:transform;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.disc svg{width:100%;height:100%;display:block}
 .disc::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 30% 22%,rgba(255,255,255,.26),transparent 42%),radial-gradient(circle at 70% 84%,rgba(0,0,0,.28),transparent 50%)}
 @keyframes discSpin{from{transform:translateY(-50%) rotate(0)}to{transform:translateY(-50%) rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){.disc{animation:none}}
@@ -282,7 +283,18 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
         <h2 class="card-title">拾光声学档案</h2>
         <p class="card-sub">每日行业雷达 · 通识积累 · 音乐产品学习 · 上升清单 · 圣地巡礼 · 面试话术</p>
         <span class="go">进入馆藏 <span class="arr">&rarr;</span></span>
-        <span class="disc" aria-hidden="true"></span>
+        <span class="disc" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" fill="#241f18"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="1"/>
+            <circle cx="50" cy="50" r="33" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1"/>
+            <circle cx="50" cy="50" r="23" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1"/>
+            <circle cx="50" cy="50" r="13" fill="#c9993d"/>
+            <circle cx="50" cy="50" r="2.4" fill="#241f18"/>
+            <path d="M34 30 A 30 30 0 0 1 58 20" fill="none" stroke="rgba(255,255,255,.36)" stroke-width="2.4" stroke-linecap="round"/>
+            <circle cx="50" cy="84" r="2" fill="#e8c86a"/>
+          </svg>
+        </span>
       </a>
 
       <a class="card card-paper" id="card-tool" href="/tool/">
