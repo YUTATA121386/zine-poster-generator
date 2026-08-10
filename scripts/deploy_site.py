@@ -93,7 +93,7 @@ def main():
     art_dir = os.path.join(here, "web", "art")
     if os.path.isdir(art_dir):
         for f in sorted(os.listdir(art_dir)):
-            art_files.append(os.path.join("web", "art", f))
+            art_files.append("web/art/" + f)
     for rel in tuple(["poster_server.py", "web/index.html", "web/tool.html"]) + tuple(art_files):
         src = os.path.join(here, rel)
         if os.path.isfile(src):
