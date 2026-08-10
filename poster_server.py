@@ -611,6 +611,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._redirect("/")
                 return
             self._serve_kb(path)
+        elif path.startswith("/art/"):
+            rel = os.path.basename(unquote(urlparse(self.path).path))
+            fp = os.path.join(WEB_DIR, "art", rel)
+            if not os.path.isfile(fp):
+                self._json({"error": "not found"}, 404)
+                return
+            ctype = "image/jpeg" if rel.lower().endswith((".jpg", ".jpeg")) else "image/png"
+            self._serve_file(fp, ctype)
         elif path == "/favicon.ico":
             self.send_response(204)
             self.end_headers()
