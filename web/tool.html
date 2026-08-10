@@ -16,7 +16,7 @@
     --ok: #3A6B3F; --warn: #B8860B;
     --blob1: rgba(242,206,132,.55); --blob2: rgba(196,214,168,.50); --blob3: rgba(247,222,196,.50);
     --glass: rgba(255,255,255,0.45); --glass-mid: rgba(255,255,255,0.55); --glass-hi: rgba(255,255,255,0.75); --glass-lo: rgba(255,255,255,0.35);
-    --radius: 6px; --shadow: 0 10px 30px rgba(42,38,32,0.06); --overlay: rgba(42,38,32,0.45);
+    --radius: 16px; --shadow: 0 10px 30px rgba(42,38,32,0.06); --overlay: rgba(42,38,32,0.45);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -31,7 +31,7 @@
     --ok: #3A6B3F; --warn: #B8860B;
     --blob1: rgba(168,206,228,.55); --blob2: rgba(210,226,200,.45); --blob3: rgba(240,228,200,.42);
     --glass: rgba(255,255,255,0.45); --glass-mid: rgba(255,255,255,0.55); --glass-hi: rgba(255,255,255,0.75); --glass-lo: rgba(255,255,255,0.35);
-    --radius: 6px; --shadow: 0 10px 30px rgba(28,46,58,0.07); --overlay: rgba(28,35,41,0.45);
+    --radius: 16px; --shadow: 0 10px 30px rgba(28,46,58,0.07); --overlay: rgba(28,35,41,0.45);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -46,7 +46,7 @@
     --ok: #3A6B3F; --warn: #B8860B;
     --blob1: rgba(238,166,116,.50); --blob2: rgba(214,138,148,.45); --blob3: rgba(176,150,206,.40);
     --glass: rgba(255,255,255,0.42); --glass-mid: rgba(255,255,255,0.52); --glass-hi: rgba(255,255,255,0.72); --glass-lo: rgba(255,255,255,0.32);
-    --radius: 6px; --shadow: 0 10px 30px rgba(90,40,20,0.08); --overlay: rgba(42,30,25,0.45);
+    --radius: 16px; --shadow: 0 10px 30px rgba(90,40,20,0.08); --overlay: rgba(42,30,25,0.45);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -61,7 +61,7 @@
     --ok: #7fbf83; --warn: #d4a94e;
     --blob1: rgba(120,90,40,.30); --blob2: rgba(60,80,120,.25); --blob3: rgba(100,50,40,.25);
     --glass: rgba(255,255,255,0.10); --glass-mid: rgba(255,255,255,0.14); --glass-hi: rgba(255,255,255,0.18); --glass-lo: rgba(255,255,255,0.08);
-    --radius: 6px; --shadow: 0 10px 30px rgba(0,0,0,0.45); --overlay: rgba(0,0,0,0.60);
+    --radius: 16px; --shadow: 0 10px 30px rgba(0,0,0,0.45); --overlay: rgba(0,0,0,0.60);
     --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
     --font-serif: 'Noto Serif SC','Songti SC','SimSun',serif;
     --font-mono: 'JetBrains Mono',monospace;
@@ -90,8 +90,10 @@
     pointer-events: none;
     z-index: 0;
     opacity: 0.35;
-    background-image: radial-gradient(60% 50% at 18% 12%, var(--blob1), transparent 70%), radial-gradient(50% 45% at 85% 80%, var(--blob2), transparent 70%), radial-gradient(45% 40% at 65% 20%, var(--blob3), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
-  }
+    background-image: radial-gradient(60% 50% at 18% 12%, var(--blob1), transparent 70%), radial-gradient(50% 45% at 85% 80%, var(--blob2), transparent 70%), radial-gradient(45% 40% at 65% 20%, var(--blob3), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E"), url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAsICAoIBwsKCQoNDAsNERwSEQ8PESIZGhQcKSQrKigkJyctMkA3LTA9MCcnOEw5PUNFSElIKzZPVU5GVEBHSEX/2wBDAQwNDREPESESEiFFLicuRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUX/wAARCAEAAQADASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAECB//EACMQAQABAwQDAQEBAQAAAAAAAAARASGBMWFxkVGh8EHxseH/xAAXAQEBAQEAAAAAAAAAAAAAAAAAAQQF/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A6DFAwX3o5TYZCKfty31VBYSeMEgdAugBBPlLeAUwW+oAY9GKJFNltQDBbwdmgGDNDXynsFiDVLeKHfQELHmsEfVNASNiN/ZWs/wgCAsVrT8ALGu5FeAMULUMlgJSArvAKWBA7FgjZRMk/VLrQEzTAtvB0CBG1FxQE+0XJJfzABggv+AUzgOanQHRwAHMrbx2hNAPRkoSBwnNfZGyghIAdkbBqAACZWRLbIL9qGhfyBcDUD7Qt5M+1uomn6cEc9qBzX2ZJJqBBiodgYOyT7UAihYsBxB0smAT7UPtEBa0S1P+qVqglK+Kk7lvBPIBgIr47BI8kU8elyWAg4qYFCEtRUsgpIc1sASW+oX/AAAuYqAdkgAF/qr95AD7QwocHR9oIBYJ29KHCXW/6YQTT+rNQBMKnagJckBbpgmf2QBcp0T5UOjo6yZA4/1FhK0p5QJVLeVmgH2oTTcpzGQA+sZALgBEf9DsingBUyZBcmQsAJlQC4nYEchYBa13SJDoCD0afoC/apkkn6QLk18hIJ2uKl9k5gCeegAPtVlDAFySCa/gGCnFRdQL7mhNP4AST9QLASW8FtgAsAB9cknxUFjZCS9QJ3A5qAckAGn4a7FvKSBG6hgCaEyl+C3n2CpJbYAksGQL8E7ooJOVwSXAX0l/JoAqSTtQFjZI2oYqTsC4Jqk/SsgdH2qa+VyBKSLPgACPM9gEfSJgFwJqXBUn6AgCdjAASaBoBPBmgYAwXQBcJK4ATMGanS5BFCa0/BQjyTWvhAWL6EBHAhcIAMGAnkF+0EySBc49GoBr56IgAI3Ij9MFgOy26LfwBbdJU+uCGKLO6TuBY6L1UEJJLgdAXAAA08BO4ihSt9VigBr/AE9pwQookFaCLyfWoigdh9ckDBgxUnYCTmtgAt4J3KwATuJgxUA5kmvgv4Be0neS/gwBgJToFndMSGUFwlyVFO0WAQ5/w4LEilz7QwARsX2ADQx6MH2oC6eU9ChlboSCk13SSRCY1pUmfwpVRU6C5lEOZIOkt5oKtt6hIqFkyLKKUL7GC6oQmQQXPtK5LAFFQFX0XQBSEuAsk8IAuollAIQwDUV+qlwwIZJ2JLirNfqJdMlvILO5PHZkwIT0napkVZ4TFA6AwdnM0K4A18lgyB9on2i2TAjWO0TmQVfrGhIBr4Oid0uDWapMeULAqpj0AWO1SQDBbyAdkHB9oBwXDAKkhkC23ZYkyBJgQFCUkBUMgWr+UqaEkgSE08la0A02WUt/CwE7qmUyCzwABJqvRPAJNP2FnlM+yPqgTTyTQ+0XX8qCTyERsttgI8kpbzXK2ACxbwB7MJMfizsBbyfaJPJgAOaoC5MdpqR5BT6xBkAngtsdAk7GKEgHP+gRXz7AL8ZADoDsAOFgAt9Unf0TuBG8l/qF6nNQMn11lJqCzH7RJoALNEvUI3A+1C2xPIIv2pMkgh0vpAJXhJAJryYDsDBH1SeT6wHSGKgLM6hqRX89AqHNzgAjY5MAspO5Oxf8BYI3Sslv0Fx2Smp0C8kp0W/f9BZ5LJ10AvCFtiY/6BBklZ5BPYSAQVqJioLOwi/WBJp59litY8k7egLeaFqklvqAWJoSmQXUqamn9AWaJJyC4JpwhmoLTmSZSSQLcLNEMgtlszYBqaU/PSTyk8E7gp9onZ7BrKcJMfwnwC674ElewJ3jgnwlZJBYj9O0neiAspMhWoLSSElJBrstunNanAKkbk/Qk3uD/9k=");
+  background-size:auto,256px;
+  background-repeat:repeat;
+}
 
   h1, h2, h3 {
     font-family: var(--font-serif);
@@ -104,9 +106,10 @@
   }
 
   .section-title {
-    font-size: 18px;
+    font-family: var(--font-serif);
+    font-size: 17px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
     margin-bottom: 18px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--sepiaLine);
@@ -148,7 +151,7 @@
   select:focus,
   textarea:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(200,69,42,0.12);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
     background: var(--glass-hi);
   }
 
@@ -183,7 +186,8 @@
     padding: 14px 18px;
     font-size: 15px;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
+    border-radius: 999px;
     color: #fff;
     background: var(--accent);
     box-shadow: 0 4px 12px rgba(200,69,42,0.22);
@@ -202,6 +206,7 @@
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.06em;
+    border-radius: 999px;
     color: var(--accent);
     background: rgba(200,69,42,0.08);
     border: 1px solid rgba(200,69,42,0.22);
@@ -220,6 +225,7 @@
     color: var(--ink80);
     background: var(--glass);
     border: 1px solid var(--ink12);
+    border-radius: 999px;
   }
 
   .icon-btn:hover {
@@ -229,11 +235,11 @@
 
   .card {
     position: relative;
-    background: var(--card);
-    border: 1px solid var(--ink12);
-    border-radius: 10px;
+    background: linear-gradient(135deg, var(--glass-hi), var(--glass-lo));
+    border: 1px solid var(--glass-brd);
+    border-radius: 18px;
     padding: 24px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 12px 28px -16px var(--shadow), inset 0 1px 0 var(--glass-spec);
   }
 
   .card::after {
@@ -241,8 +247,8 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    border-radius: 10px;
-    opacity: 0.25;
+    border-radius: 18px;
+    opacity: 0.22;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
   }
 
@@ -263,11 +269,11 @@
     position: relative;
     width: 100%;
     max-width: 420px;
-    background: var(--card);
-    border: 1px solid var(--ink12);
-    border-radius: 12px;
+    background: linear-gradient(135deg, var(--glass-hi), var(--glass-lo));
+    border: 1px solid var(--glass-brd);
+    border-radius: 18px;
     padding: 42px 36px 36px;
-    box-shadow: 0 24px 60px rgba(42,38,32,0.18);
+    box-shadow: 0 24px 60px -24px var(--shadow), inset 0 1px 0 var(--glass-spec);
     text-align: center;
   }
 
@@ -310,10 +316,14 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 14px 22px;
-    background: rgba(242,234,218,0.92);
-    border-bottom: 1px solid var(--ink12);
-    backdrop-filter: blur(6px);
+    padding: 12px 20px;
+    margin: 10px 14px 0;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--glass-hi), var(--glass-lo));
+    border: 1px solid var(--glass-brd);
+    box-shadow: 0 12px 28px -16px var(--shadow), inset 0 1px 0 var(--glass-spec);
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
   }
 
   .logo {
@@ -329,6 +339,10 @@
     display: flex;
     align-items: center;
     gap: 10px;
+  }
+
+  .actions a.icon-btn {
+    text-decoration: none;
   }
 
   .status-pill {
@@ -884,9 +898,11 @@
     bottom: 0;
     width: 420px;
     max-width: 100%;
-    background: var(--card);
-    border-left: 1px solid var(--ink12);
+    background: linear-gradient(135deg, var(--glass-mid), var(--glass-lo));
+    border-left: 1px solid var(--glass-brd);
     box-shadow: -12px 0 40px rgba(42,38,32,0.14);
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
     transform: translateX(100%);
     transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1);
     display: flex;
@@ -906,7 +922,9 @@
   }
 
   .drawer-head h2 {
+    font-family: var(--font-serif);
     font-size: 20px;
+    letter-spacing: 0.06em;
   }
 
   .close-drawer {
@@ -1189,6 +1207,7 @@
 <header>
   <div class="logo">ZINE 海报生成器</div>
   <div class="actions">
+    <a class="icon-btn" id="backPortalBtn" href="/" title="回到登录门户">← 返回门户</a>
     <span class="status-pill">
       <span id="apiStatusDot"></span>
       <span id="apiStatusText">服务检测中</span>

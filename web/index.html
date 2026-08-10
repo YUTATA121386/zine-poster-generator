@@ -47,6 +47,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:
   radial-gradient(45% 40% at 65% 20%,var(--blob3),transparent 70%);pointer-events:none}
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
   background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0 1px,transparent 1px 3px)}
+.bg-paper{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.13;background:url(/art/paper.jpg) repeat;background-size:420px;mix-blend-mode:multiply}
 ::selection{background:var(--accent);color:var(--bg)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 a{color:inherit}
@@ -59,6 +60,7 @@ main{flex:1}
 .brand b{font-weight:700}
 .brand span{color:var(--ink3)}
 .brand-note{font-size:10px;letter-spacing:.3em;color:var(--ink3)}
+.brand-right{display:flex;align-items:center;gap:12px}
 .palette-btn{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--ink2);background:transparent;border:1px solid var(--line2);border-radius:999px;padding:5px 14px;cursor:pointer;transition:all .25s}
 .palette-btn:hover{color:var(--accent);border-color:var(--accent)}
 
@@ -92,10 +94,6 @@ main{flex:1}
 .form-note{margin-top:16px;text-align:center;font-size:10px;letter-spacing:.2em;color:var(--ink2)}
 
 #view-portal{display:none}
-.portal-top{border-bottom:1px solid var(--line)}
-.portal-top-in{display:flex;justify-content:space-between;align-items:center;padding-top:12px;padding-bottom:12px}
-.portal-brand{font-family:var(--serif);font-size:13px;letter-spacing:.18em}
-.portal-brand em{font-style:normal;color:var(--accent);margin:0 4px}
 .portal-me{display:flex;align-items:center;gap:14px}
 #portal-user{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--serif);font-size:12px}
 #logout-btn{background:transparent;border:1px solid var(--line2);color:var(--ink);padding:5px 16px 5px calc(16px + .24em);font-family:var(--sans);font-size:11px;letter-spacing:.24em;cursor:pointer;transition:border-color .2s,color .2s;border-radius:999px}
@@ -125,10 +123,7 @@ main{flex:1}
 .card-dark .go{color:var(--accent)}
 .card-dark:hover{border-color:var(--accent)}
 
-.disc{position:absolute;top:50%;right:-58px;width:216px;height:216px;border-radius:50%;transform:translateY(-50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
-  background:
-    radial-gradient(circle at 50% 50%,var(--bg) 0,var(--bg) 3px,var(--accent) 3px,var(--accent) 32px,rgba(0,0,0,0) 32px),
-    repeating-radial-gradient(circle at 50% 50%,#252119 0,#252119 2px,#131009 2px,#131009 5px)}
+.disc{position:absolute;top:50%;right:-58px;width:216px;height:216px;border-radius:50%;transform:translateY(-50%);border:9px solid var(--dark);background:url(/art/vinyl.jpg) center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 18px 36px -18px var(--shadow)}
 .disc::after{content:"I";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--serif);font-size:13px;color:var(--bg)}
 
 .card-paper{background:linear-gradient(135deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--glass-brd);color:var(--ink);padding-left:58px;box-shadow:inset 0 1px 0 var(--glass-spec)}
@@ -201,12 +196,19 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 })();
 </script></head>
 <body>
+<div class="bg-paper" aria-hidden="true"></div>
 
 <header class="brandbar">
   <div class="wrap brandbar-in">
     <p class="brand"><b>YUTATA</b> 档案室 <span>·</span> 拾光声学档案</p>
     <p class="brand-note">PRIVATE ARCHIVE · EST. MMXXIV</p>
-    <button id="palette-btn" class="palette-btn" type="button" aria-label="时段配色">自动</button>
+    <div class="brand-right">
+      <div class="portal-me" id="portal-me" style="display:none">
+        <span id="portal-user">Y</span>
+        <button id="logout-btn" type="button">退出</button>
+      </div>
+      <button id="palette-btn" class="palette-btn" type="button" aria-label="时段配色">自动</button>
+    </div>
   </div>
 </header>
 
@@ -268,16 +270,6 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 </section>
 
 <section id="view-portal">
-  <div class="portal-top">
-    <div class="wrap portal-top-in">
-      <p class="portal-brand">拾光声学档案<em>/</em>馆内索引</p>
-      <div class="portal-me">
-        <span id="portal-user">Y</span>
-        <button id="logout-btn" type="button">退出</button>
-      </div>
-    </div>
-  </div>
-
   <div class="wrap portal-main">
     <p class="kick">INDEX · 馆藏目录</p>
     <h2 class="portal-title">两处常去的地方</h2>
@@ -331,10 +323,12 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
   function showPortal() {
     $("view-login").style.display = "none";
     $("view-portal").style.display = "block";
+    $("portal-me").style.display = "flex";
   }
   function showLogin() {
     $("view-login").style.display = "block";
     $("view-portal").style.display = "none";
+    $("portal-me").style.display = "none";
   }
   function enterPortal(me) {
     var u = me.username || "";
