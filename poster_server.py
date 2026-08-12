@@ -598,17 +598,17 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(os.path.join(WEB_DIR, "index.html"), "text/html; charset=utf-8")
         elif path in ("/tool", "/tool/"):
             if not session_user(self):
-                self._redirect("/")
+                self._redirect("/?next=/tool/")
                 return
             self._serve_file(os.path.join(WEB_DIR, "tool.html"), "text/html; charset=utf-8")
         elif path == "/kb":
             if not session_user(self):
-                self._redirect("/")
+                self._redirect("/?next=/kb/")
                 return
             self._redirect("/kb/")
         elif path.startswith("/kb/"):
             if not session_user(self):
-                self._redirect("/")
+                self._redirect("/?next=/kb/")
                 return
             self._serve_kb(path)
         elif path.startswith("/art/"):

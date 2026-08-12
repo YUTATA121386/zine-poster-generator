@@ -186,11 +186,13 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 @media (prefers-reduced-motion:reduce){
   *{transition:none !important}
 }
+.login-next{display:none;margin:0 0 12px;padding:9px 12px;border:1px dashed var(--accent);border-radius:10px;color:var(--accent);font-size:12px;letter-spacing:.05em;background:var(--glass-lo)}
 </style>
 <script>
 (function () {
   var PALS = ["auto", "morning", "noon", "dusk", "night"];
-  var saved = localStorage.getItem("pg_palette") || "auto";
+  var saved = "auto";
+  try { saved = localStorage.getItem("pg_palette") || "auto"; } catch (e) {}
   function apply(p) {
     document.documentElement.setAttribute("data-palette", p === "auto" ? autoPal() : p);
     var btn = document.getElementById("palette-btn");
@@ -206,7 +208,7 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
   function cycle() {
     var i = PALS.indexOf(saved);
     saved = PALS[(i + 1) % PALS.length];
-    localStorage.setItem("pg_palette", saved);
+    try { localStorage.setItem("pg_palette", saved); } catch (e) {}
     apply(saved);
   }
   apply(saved);
@@ -268,6 +270,7 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
           <input id="login-password" name="password" type="password" placeholder="请输入密码" autocomplete="current-password">
         </div>
         <p class="err" id="login-error"></p>
+        <p class="login-next" id="login-next">请先登录，登录后将自动进入所选入口</p>
         <button class="btn" id="login-btn" type="submit">登录</button>
         <p class="form-note">仅限本人与受邀访客 · PRIVATE ONLY</p>
       </form>
@@ -357,7 +360,8 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
   function api(path, opts) {
     opts = opts || {};
     var headers = { "Content-Type": "application/json" };
-    var token = localStorage.getItem("pg_token");
+    var token = null;
+    try { token = localStorage.getItem("pg_token"); } catch (e) {}
     if (token) headers["Authorization"] = "Bearer " + token;
     return fetch(path, {
       method: opts.method || "GET",
@@ -386,8 +390,16 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
     $("portal-user").textContent = (u ? u[0] : "?").toUpperCase();
     showPortal();
   }
+  function goNext() {
+    var m = /[?&]next=([^&]+)/.exec(location.search);
+    if (m) location.href = decodeURIComponent(m[1]);
+  }
   function boot() {
-    api("/api/me").then(enterPortal).catch(showLogin);
+    if (/[?&]next=/.test(location.search)) {
+      var el = $("login-next");
+      if (el) el.style.display = "block";
+    }
+    api("/api/me").then(function (me) { enterPortal(me); goNext(); }).catch(showLogin);
   }
   $("login-form").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -395,8 +407,9 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
       method: "POST",
       body: { username: $("login-username").value.trim(), password: $("login-password").value }
     }).then(function (d) {
-      localStorage.setItem("pg_token", d.token);
+      try { localStorage.setItem("pg_token", d.token); } catch (e) {}
       enterPortal(d);
+      goNext();
     }).catch(function (err) { $("login-error").textContent = err.message; });
   });
   $("reg-form").addEventListener("submit", function (e) {
@@ -405,8 +418,9 @@ footer a:hover{color:var(--accent);border-bottom-color:var(--accent)}
       method: "POST",
       body: { username: $("reg-username").value.trim(), password: $("reg-password").value }
     }).then(function (d) {
-      localStorage.setItem("pg_token", d.token);
+      try { localStorage.setItem("pg_token", d.token); } catch (e) {}
       enterPortal(d);
+      goNext();
     }).catch(function (err) { $("reg-error").textContent = err.message; });
   });
   $("logout-btn").addEventListener("click", function () {
