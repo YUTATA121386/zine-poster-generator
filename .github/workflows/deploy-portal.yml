@@ -3,11 +3,6 @@ name: Deploy Portal to Server
 on:
   push:
     branches: [main]
-    paths:
-      - "poster_server.py"
-      - "web/**"
-      - "scripts/deploy_site.py"
-      - "requirements.txt"
   workflow_dispatch:
 
 permissions:
