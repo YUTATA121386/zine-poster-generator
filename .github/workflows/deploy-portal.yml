@@ -1,0 +1,33 @@
+name: Deploy Portal to Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "poster_server.py"
+      - "web/**"
+      - "scripts/deploy_site.py"
+      - "requirements.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-portal
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install paramiko
+        run: pip install paramiko
+      - name: Deploy portal to server
+        env:
+          ALI_PWD: ${{ secrets.ALI_PWD }}
+        run: python scripts/deploy_site.py --skip-kb
