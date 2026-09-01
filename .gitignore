@@ -1,4 +1,4 @@
-﻿# 本机敏感配置（绝不提交）
+# 本机敏感配置（绝不提交）
 config.json
 .env
 
@@ -10,3 +10,7 @@ __pycache__/
 history.jsonl
 users.json
 uploads/
+sessions.json
+srv.err.log
+srv.log
+*.log
